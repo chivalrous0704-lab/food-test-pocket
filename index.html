@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>食品検査ポケット v1.9</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#f4f7fb;color:#18212f;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #dce4ee;padding:14px 16px 10px}
+h1{font-size:20px;margin:0 0 10px} .search{display:flex;gap:8px} input{width:100%;font-size:16px;padding:12px;border:1px solid #c9d4e2;border-radius:12px;background:#f8fafc}
+main{max-width:760px;margin:auto;padding:14px 14px 90px} .hint{font-size:12px;color:#68778a;margin:4px 2px 12px}
+.card{background:#fff;border:1px solid #dce4ee;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 2px 8px #172b4d0d}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .name{font-size:18px;font-weight:700} .badge{font-size:12px;background:#e9f3ff;color:#1466a8;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px} .pill{background:#f1f5f9;padding:6px 9px;border-radius:10px;font-size:13px}
+button{border:0;border-radius:11px;padding:10px 12px;font-size:14px;font-weight:650} .primary{background:#1677c8;color:#fff} .secondary{background:#eaf2f9;color:#155f99} .actions{display:flex;gap:8px;margin-top:12px}
+.detail h2{margin:0 0 8px;font-size:22px} .detail h3{font-size:15px;margin:17px 0 6px;color:#25425c} .detail p{margin:0;line-height:1.7;font-size:14px}
+.back{margin-bottom:10px;background:#eaf2f9;color:#155f99} .price{font-size:20px;font-weight:800;color:#1267a6}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dce4ee;display:flex;justify-content:center;z-index:6;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;max-width:260px;background:#fff;color:#536477;border-radius:0;padding:13px 4px} nav button.active{color:#1677c8}
+.quoteItem{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #e6edf5;padding:11px 0} .total{font-size:22px;font-weight:800;margin-top:14px}
+.note{background:#fff8e6;border:1px solid #f2d68d;border-radius:12px;padding:10px;font-size:12px;line-height:1.55;margin-top:12px}
+a{color:#1267a6}
+.caseCard{background:#fff;border:1px solid #dce4ee;border-radius:16px;padding:14px;margin:10px 0}
+.caseIcon{font-size:27px;margin-right:9px}
+.step{border-left:4px solid #cfe5f7;padding:3px 0 3px 12px;margin:10px 0}
+.chip{display:inline-block;background:#eef5fb;border-radius:999px;padding:6px 9px;margin:3px;font-size:12px}
+.foodGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.foodCard{background:#fff;border:1px solid #dce4ee;border-radius:16px;padding:14px;min-height:105px}
+.foodName{font-weight:800;font-size:17px;margin-bottom:6px}
+.legal{display:inline-block;background:#fff1d6;color:#805b00;padding:4px 7px;border-radius:8px;font-size:11px;font-weight:700;margin:3px 3px 3px 0}
+.voluntary{display:inline-block;background:#e9f3ff;color:#1466a8;padding:4px 7px;border-radius:8px;font-size:11px;font-weight:700;margin:3px 3px 3px 0}
+@media(max-width:420px){.foodGrid{grid-template-columns:1fr 1fr}} .empty{text-align:center;color:#718096;padding:36px 10px}
+
+.foodGrid{display:grid;grid-template-columns:1fr;gap:9px}
+.foodTap{-webkit-appearance:none;appearance:none;width:100%;display:block;text-align:left;background:#fff;border:1px solid #dce4ee;border-radius:14px;padding:14px 15px;color:#17212b;font:inherit;cursor:pointer;touch-action:manipulation}
+.foodTap:active{transform:scale(.99);background:#f5f9fc}
+.foodTapTitle{display:block;font-weight:700;font-size:15px;line-height:1.45}
+.foodTapSub{display:block;font-size:12px;color:#637386;margin-top:5px;line-height:1.45}
+select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #cfd9e6;border-radius:10px;background:#fff;font-size:16px}
+.priorityHigh{display:inline-block;background:#e8f7ed;color:#176b35;padding:4px 7px;border-radius:8px;font-size:11px;font-weight:800;margin-left:6px}
+.priorityCond{display:inline-block;background:#fff3cd;color:#805b00;padding:4px 7px;border-radius:8px;font-size:11px;font-weight:800;margin-left:6px}
+.priorityBase{display:inline-block;background:#e9f3ff;color:#1466a8;padding:4px 7px;border-radius:8px;font-size:11px;font-weight:800;margin-left:6px}
+.condBox{background:#f8fbff;border:1px solid #cfe2f3;border-radius:13px;padding:11px 12px;margin:8px 0}
+.condHead{font-weight:800;font-size:14px;margin-bottom:5px}
+.condText{font-size:13px;line-height:1.6;color:#33485d}
+</style>
+<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=190">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-180x180.png?v=190">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png?v=190">
+<link rel="manifest" href="./manifest.webmanifest?v=190">
+<meta name="theme-color" content="#1677c8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="食品検査ポケット">
+
+<!-- GitHub Pages compatible build: relative asset paths -->
+</head><body>
+<header><h1>🧪 食品検査ポケット <span style="font-size:11px;color:#789">v1.9</span></h1><div class="search"><input id="q" placeholder="検査名・食品・工程で検索（例：鶏肉、冷却）"></div></header>
+<main id="app"></main>
+<nav>
+<button id="tabTests" class="active" onclick="showList()">🔎<br>検査</button>
+<button id="tabFoods" onclick="showFoods()">🍱<br>食品</button>
+<button id="tabProcess" onclick="showProcesses()">🏭<br>工程</button>
+<button id="tabCases" onclick="showCases()">↩️<br>逆引き</button>
+<button id="tabQuote" onclick="showQuote()">🧾<br>見積<span id="count"></span></button>
+</nav>
+<script>
+const tests=[{"name": "一般生菌数", "price": 900, "days": "4日", "cat": "衛生指標", "foods": "幅広い食品", "feature": "食品中の好気性・通性嫌気性の細菌を一定条件で培養し、衛生状態や品質管理の目安としてみる代表的な指標です。菌数が高いことだけで特定の食中毒菌の存在を意味するものではありません。", "when": "原料・製造工程・保存条件の衛生状態を広く確認したいとき。", "positive": "高値の場合は、原料由来、加熱不足、加熱後汚染、冷却・保存温度、器具や手指など工程全体を確認します。製品特性や社内基準と合わせて評価します。", "check": "原料／加熱条件／加熱後工程／冷却／保存温度／器具・設備の洗浄", "talk": "一般生菌数は、食品全体の衛生状態を見る代表的な指標です。高いから直ちに食中毒という意味ではなく、工程や保存条件と合わせて原因を見ていきます。", "tags": "衛生 指標 加熱後 保存 原料 品質"}, {"name": "大腸菌群", "price": 900, "days": "4日", "cat": "衛生指標", "foods": "加熱食品・加工食品など", "feature": "食品の衛生状態をみる指標として広く利用される菌群です。大腸菌そのものとは異なり、環境由来の菌も含みます。", "when": "加熱工程や加熱後の衛生管理を確認したいとき。食品ごとの規格基準・自主基準の確認にも用いられます。", "positive": "陽性だけで糞便汚染や食中毒菌の存在を断定できません。加熱済み食品なら、加熱条件と加熱後の器具・手指・包装工程などの再汚染を確認します。", "check": "加熱条件／加熱後の手作業／器具／包装／交差汚染／原料特性", "talk": "大腸菌群は衛生状態を見る指標です。陽性＝大腸菌や食中毒菌がいる、とは言えません。特に加熱食品では加熱後の再汚染も確認します。", "tags": "衛生 指標 加熱後 再汚染 交差汚染"}, {"name": "黄色ブドウ球菌", "price": 1000, "days": "4日", "cat": "食中毒菌", "foods": "弁当・惣菜・おにぎり・菓子など手作業の多い食品", "feature": "人の皮膚や鼻腔などに存在し、手指などを介して食品を汚染することがあります。食品中で増殖してエンテロトキシンを産生すると食中毒の原因になります。", "when": "手作業が多い食品、加熱後に人が触れる食品などの衛生確認。", "positive": "手指衛生、手荒れ・化膿創、加熱後の取扱い、室温放置などを確認します。菌が作った毒素は耐熱性が高いため、菌を加熱で減らすだけでは対策にならない場合があります。", "check": "手洗い／手袋／手荒れ・傷／加熱後工程／放冷時間／保管温度", "talk": "人由来の汚染を考えやすい菌なので、陽性時は特に加熱後の手作業や手指衛生、温度管理を確認します。", "tags": "手指 人 加熱後 弁当 おにぎり 惣菜 毒素"}, {"name": "サルモネラ", "price": 1200, "days": "5日", "cat": "食中毒菌", "foods": "鶏肉・鶏卵・食肉など", "feature": "人や動物の腸管などに関連する食中毒菌です。鶏肉や鶏卵などがリスクプロファイルの対象として公的機関から示されています。", "when": "鶏肉・卵・食肉を扱う食品や、原料・工程上サルモネラの危害を考慮する場合。", "positive": "原料由来、加熱不足、生原料から加熱後製品への交差汚染などを確認します。検出時は製品・規格・用途に応じて速やかな対応判断が必要です。", "check": "原料／加熱条件／生・加熱済み区域／器具／交差汚染／保管", "talk": "サルモネラは鶏肉や卵などで重要な食中毒菌です。検出時は加熱条件だけでなく、生原料から加熱後製品への交差汚染も確認します。", "tags": "鶏肉 卵 食肉 加熱 交差汚染 食中毒"}, {"name": "腸炎ビブリオ", "price": 1500, "days": "4日", "cat": "食中毒菌", "foods": "生鮮魚介類・刺身など", "feature": "海水環境と関係が深く、生鮮魚介類で注意される食中毒菌です。", "when": "魚介類、とくに生食・非加熱で提供する製品の危害確認。", "positive": "原料魚介類、洗浄水、低温管理、二次汚染などを確認します。", "check": "魚介原料／洗浄／低温管理／器具／二次汚染", "talk": "魚介類で特に注意する食中毒菌です。原料だけでなく、低温管理や調理工程での二次汚染も確認します。", "tags": "魚介 刺身 海水 生食 低温"}, {"name": "大腸菌（E. coli）", "price": 900, "days": "4日", "cat": "衛生指標", "foods": "食品全般（製品・基準に応じる）", "feature": "大腸菌群よりも糞便汚染との関連が強い衛生指標として用いられます。ただし病原性大腸菌とは区別して考えます。", "when": "糞便系汚染の指標を確認したい場合や、食品ごとの規格・自主基準に応じて実施。", "positive": "原料、水、手指、器具、交差汚染などを確認します。陽性＝O157等の病原大腸菌という意味ではありません。", "check": "原料／水／手指／器具／加熱／交差汚染", "talk": "E. coli陽性は衛生上重要ですが、それだけでO157などの病原大腸菌がいるとは言えません。必要に応じて追加検査を検討します。", "tags": "大腸菌 Ecoli 糞便 指標 追加検査"}, {"name": "病原大腸菌", "price": 1500, "days": "4日", "cat": "食中毒菌", "foods": "食肉・生食用食品など（目的に応じる）", "feature": "病原性を持つ大腸菌を対象とする検査です。対象となる型や試験内容は依頼目的により確認が必要です。", "when": "病原大腸菌の危害を確認する必要がある場合。", "positive": "対象菌・試験法を確認したうえで、原料、加熱、交差汚染等を調査します。", "check": "対象菌／試験法／原料／加熱／交差汚染", "talk": "『病原大腸菌』は検査対象の範囲確認が重要です。依頼目的に合わせて対象菌・試験法を確認します。", "tags": "病原大腸菌 食肉 加熱"}, {"name": "O157", "price": 2000, "days": "4日", "cat": "食中毒菌", "foods": "食肉・生食用食品など", "feature": "腸管出血性大腸菌の代表的な血清型の一つです。重篤な症状につながる場合があるため重要な危害要因です。", "when": "食肉など、腸管出血性大腸菌の危害を考慮する食品。", "positive": "原料由来、加熱不足、交差汚染などを確認し、製品や法令・基準に応じて対応します。", "check": "原料／加熱／生食工程／交差汚染／器具", "talk": "O157は腸管出血性大腸菌の代表的な型です。一般のE. coli検査とは目的が異なります。", "tags": "O157 腸管出血性大腸菌 食肉 生食"}, {"name": "O111", "price": 3000, "days": "6日", "cat": "食中毒菌", "foods": "目的に応じる", "feature": "腸管出血性大腸菌として問題となり得る血清型の一つです。", "when": "依頼仕様や危害分析で対象となる場合。", "positive": "検出時は製品・用途・試験法を確認し、原料・加熱・交差汚染を調査します。", "check": "対象規格／原料／加熱／交差汚染", "talk": "O111は腸管出血性大腸菌として確認対象になることがある型です。", "tags": "O111 腸管出血性大腸菌"}, {"name": "O26", "price": 3000, "days": "6日", "cat": "食中毒菌", "foods": "目的に応じる", "feature": "腸管出血性大腸菌として問題となり得る血清型の一つです。", "when": "依頼仕様や危害分析で対象となる場合。", "positive": "検出時は製品・用途・試験法を確認し、原料・加熱・交差汚染を調査します。", "check": "対象規格／原料／加熱／交差汚染", "talk": "O26は腸管出血性大腸菌として確認対象になることがある型です。", "tags": "O26 腸管出血性大腸菌"}, {"name": "セレウス（定性）", "price": 2000, "days": "4日", "cat": "食中毒菌", "foods": "米飯・麺類・でんぷん質食品など", "feature": "芽胞を形成する菌で、食品中で増殖して食中毒の原因となることがあります。", "when": "米飯・麺類などを含め、工程上セレウス菌の危害を考慮する場合。", "positive": "加熱だけでなく、加熱後の冷却速度、室温放置、保存温度などを確認します。", "check": "原料／加熱後冷却／室温放置／保存温度", "talk": "芽胞形成菌なので、加熱だけでなく加熱後に増やさない冷却・温度管理が重要です。", "tags": "米飯 麺 芽胞 冷却 室温"}, {"name": "耐熱性菌", "price": 1000, "days": "4日", "cat": "品質・工程", "foods": "加熱食品など", "feature": "加熱後にも生残し得る微生物群を工程・品質管理の観点から確認する検査です。対象・条件は試験仕様の確認が必要です。", "when": "加熱工程の評価や、加熱後に残存する菌を確認したい場合。", "positive": "加熱条件、原料の菌数、芽胞形成菌、冷却・保存条件などを確認します。", "check": "試験仕様／加熱条件／原料／冷却／保存", "talk": "耐熱性菌は試験条件によって意味が変わるので、何を確認したい検査かを先に合わせます。", "tags": "耐熱 加熱 芽胞 工程"}, {"name": "真菌（カビ）", "price": 2000, "days": "8〜11日", "cat": "品質・腐敗", "foods": "菓子・乾燥食品・農産物など", "feature": "カビの発生は品質劣化の原因となり、食品によっては保存性評価で重要です。", "when": "保存性、カビ発生、低水分食品などの品質確認。", "positive": "水分活性、包装、結露、保管湿度、原料汚染、製造環境などを確認します。", "check": "水分活性／包装／結露／保管湿度／環境", "talk": "カビは一般生菌数だけでは評価しきれないことがあります。低水分食品でも製品特性に応じて確認します。", "tags": "カビ 真菌 菓子 乾燥 水分活性 aw 保存"}, {"name": "酵母", "price": 3500, "days": "8〜11日", "cat": "品質・腐敗", "foods": "糖分の多い食品・飲料・発酵食品など", "feature": "食品の変敗・発酵に関係する微生物で、製品特性によって品質管理上重要になります。", "when": "膨張、ガス、異臭などの変敗や保存性を確認する場合。", "positive": "糖度、pH、水分活性、包装、保存温度、製造環境などを確認します。", "check": "pH／水分活性／糖度／包装／保存温度", "talk": "酵母は製品によっては一般生菌とは別に保存性を左右するので、製品特性に合わせて評価します。", "tags": "酵母 発酵 変敗 pH aw 水分活性"}, {"name": "乳酸菌数", "price": null, "days": "5日", "cat": "品質・工程", "foods": "発酵食品・品質管理対象食品など", "feature": "乳酸菌の菌数を確認する検査です。製品によって有用菌として評価する場合と、変敗原因として確認する場合があります。", "when": "発酵状態や品質変化など、目的に応じて実施。", "positive": "製品目的、保存条件、pH、官能変化などと合わせて評価します。", "check": "検査目的／pH／保存温度／官能／製造工程", "talk": "乳酸菌は製品によって意味が逆になるので、まず『何のために測るか』を確認します。", "tags": "乳酸菌 発酵 pH 品質"}, {"name": "カンピロバクター（定性）", "price": 3800, "days": "4日", "cat": "食中毒菌", "foods": "鶏肉・食鳥肉など", "feature": "鶏などの腸管に存在し、鶏肉を中心に重要な食中毒菌です。食品中で増殖するというより、汚染された食品の摂取が問題になります。", "when": "鶏肉・食鳥肉などの危害確認。", "positive": "原料汚染、加熱不足、生肉から調理済み食品への交差汚染を確認します。", "check": "鶏肉原料／加熱／トング・まな板／生・加熱済み区分", "talk": "カンピロバクターは鶏肉で特に重要です。加熱不足と、生肉から他の食品への交差汚染を確認します。", "tags": "鶏肉 食鳥 生肉 加熱 交差汚染"}, {"name": "ウェルシュ（定性）", "price": 3500, "days": "4日", "cat": "食中毒菌", "foods": "煮込み料理・大量調理食品など", "feature": "芽胞を形成する嫌気性菌で、大量調理後の不適切な冷却・保管などがリスクになります。", "when": "大量調理、煮込み、加熱後に時間をかけて冷却する食品など。", "positive": "加熱後の冷却、保管温度、再加熱、鍋のままの放冷などを確認します。", "check": "大量調理／冷却速度／保管温度／再加熱", "talk": "ウェルシュ菌は加熱後の冷却管理がポイントです。大鍋のままゆっくり冷ます工程がないか確認します。", "tags": "ウェルシュ 煮込み 大量調理 芽胞 冷却"}, {"name": "リステリア", "price": 10000, "days": "9〜11日", "cat": "食中毒菌", "foods": "非加熱喫食調理済み食品（RTE）・魚介類など", "feature": "低温でも増殖し得る食中毒菌で、加熱せずに食べる調理済み食品では特に衛生管理が重要です。", "when": "RTE食品など、製造後に加熱せず喫食する食品で危害を考慮する場合。", "positive": "原料だけでなく、製造環境、加熱後汚染、冷蔵保存期間などを確認します。", "check": "RTE／製造環境／加熱後工程／冷蔵／賞味期限", "talk": "リステリアは冷蔵温度でも増殖し得るため、RTE食品では製造環境と保存期間も重要です。", "tags": "リステリア RTE 冷蔵 加熱後 環境 魚介"}, {"name": "クロストリジア", "price": null, "days": "5日", "cat": "品質・工程", "foods": "目的に応じる", "feature": "クロストリジアを対象とする検査です。対象菌群・試験条件によって意味が変わるため、依頼仕様の確認が重要です。", "when": "製品規格や工程管理などで指定される場合。", "positive": "試験対象、加熱条件、嫌気条件、包装、保存条件などを確認します。", "check": "試験仕様／包装／加熱／保存条件", "talk": "クロストリジアは試験仕様で対象が変わるため、目的と検査条件を確認してから説明します。", "tags": "クロストリジア 嫌気 芽胞 包装"}];
+const foods=[{"group": "冷凍食品", "name": "冷凍食品（無加熱摂取）", "icon": "❄️", "summary": "自然解凍など、そのまま食べる冷凍食品", "legalText": "食品衛生法上の冷凍食品の区分に該当する場合は成分規格を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "リステリア"], "reason": "法定規格に加え、加熱後汚染やRTEとしての危害分析から追加検討。"}, {"group": "冷凍食品", "name": "冷凍食品（加熱後摂取・凍結直前加熱）", "icon": "🍳", "summary": "製造時に加熱してから凍結", "legalText": "食品衛生法上の冷凍食品の区分に該当する場合は成分規格を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "セレウス（定性）", "ウェルシュ（定性）"], "reason": "加熱後の冷却・取扱いも含めて危害分析。"}, {"group": "冷凍食品", "name": "冷凍食品（加熱後摂取・凍結直前未加熱）", "icon": "🧊", "summary": "喫食前加熱が必要で凍結直前に加熱していないもの", "legalText": "食品衛生法上の冷凍食品の区分に該当する場合は成分規格を確認。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "サルモネラ"], "reason": "原料由来の危害と喫食前加熱を考慮。"}, {"group": "魚介・寿司", "name": "生食用冷凍鮮魚介類", "icon": "🍣", "summary": "刺身等の生食用冷凍魚介類", "legalText": "生食用冷凍鮮魚介類には成分規格・加工基準・保存基準があります。", "suggest": ["一般生菌数", "大腸菌群", "腸炎ビブリオ", "リステリア"], "reason": "法定項目に加え、加工工程・RTE特性に応じて追加検討。"}, {"group": "魚介・寿司", "name": "刺身・生食用鮮魚介類", "icon": "🐟", "summary": "非加熱で喫食する魚介類", "legalText": "食品衛生法上の『生食用鮮魚介類』に該当する場合は成分規格・加工基準・保存基準を確認。", "suggest": ["一般生菌数", "大腸菌群", "腸炎ビブリオ"], "reason": "魚介由来、加工時の衛生、低温管理を確認。"}, {"group": "魚介・寿司", "name": "寿司・冷凍寿司", "icon": "🍣", "summary": "酢飯と生・加熱済みネタを組み合わせる食品", "legalText": "ネタ・製造方法・冷凍食品該当性によって適用基準が変わるため個別確認。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌", "腸炎ビブリオ"], "reason": "米飯、手作業、生鮮魚介、解凍・低温管理を分けて考える。"}, {"group": "魚介・寿司", "name": "ゆでだこ", "icon": "🐙", "summary": "ゆでたタコ・冷凍ゆでだこ", "legalText": "ゆでだこ・冷凍ゆでだこには成分規格、加工・保存基準があります。冷凍品か非冷凍品かも確認。", "suggest": ["一般生菌数", "大腸菌群", "腸炎ビブリオ"], "reason": "加熱後汚染、魚介由来、低温管理を確認。"}, {"group": "魚介・寿司", "name": "ゆでがに", "icon": "🦀", "summary": "ゆでたカニ・冷凍ゆでがに", "legalText": "ゆでがに・冷凍ゆでがにには食品衛生法上の基準があります。製品形態を確認。", "suggest": ["一般生菌数", "大腸菌群", "腸炎ビブリオ"], "reason": "加熱後のむき身工程や低温管理も確認。"}, {"group": "魚介・寿司", "name": "魚肉練り製品", "icon": "🍥", "summary": "かまぼこ・ちくわ・魚肉ソーセージ等", "legalText": "魚肉ねり製品には食品衛生法上の成分規格・製造・保存基準があります。製品区分を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌"], "reason": "製品区分、加熱、包装、保存条件から検討。"}, {"group": "食肉", "name": "鶏肉・鶏肉加工品", "icon": "🍗", "summary": "鶏肉を主原料とする食品", "legalText": "生鮮肉・食肉製品・冷凍食品など製品区分により基準が異なるため個別確認。", "suggest": ["サルモネラ", "カンピロバクター（定性）", "一般生菌数", "大腸菌（E. coli）"], "reason": "鶏由来の危害、加熱、交差汚染を確認。"}, {"group": "食肉", "name": "牛肉・牛肉加工品", "icon": "🥩", "summary": "牛肉、ひき肉、加工食品", "legalText": "生食用食肉、食肉製品等は個別の規格基準があります。製品区分を確認。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "O157", "サルモネラ"], "reason": "原料由来、ひき肉工程、加熱・交差汚染を検討。"}, {"group": "食肉", "name": "豚肉・豚肉加工品", "icon": "🐖", "summary": "豚肉、ひき肉、加工食品", "legalText": "食肉製品に該当する場合など、製品区分ごとの規格基準を確認。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "サルモネラ"], "reason": "原料由来、加熱、交差汚染を検討。"}, {"group": "食肉", "name": "ハム・ソーセージ・ベーコン", "icon": "🌭", "summary": "食肉製品", "legalText": "加熱食肉製品、非加熱食肉製品、特定加熱食肉製品等で基準が異なります。製品区分の確定が先。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌", "リステリア"], "reason": "加熱・非加熱、Aw、包装、冷蔵保存など製品特性から検討。"}, {"group": "惣菜・弁当", "name": "弁当・そうざい（加熱品）", "icon": "🍱", "summary": "卵焼、揚げ物、煮物など", "legalText": "食品の正式区分を確認。旧衛生規範の数値を現行の法的義務と混同しない。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "黄色ブドウ球菌"], "reason": "加熱、放冷、盛付け、手指衛生の確認に使いやすい。"}, {"group": "惣菜・弁当", "name": "サラダ・和え物・未加熱惣菜", "icon": "🥗", "summary": "加熱後に和える食品や生野菜を含む惣菜", "legalText": "食品の正式区分・原材料による規格基準を個別確認。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌"], "reason": "洗浄、手作業、交差汚染、低温管理を確認。"}, {"group": "惣菜・弁当", "name": "おにぎり・米飯製品", "icon": "🍙", "summary": "握り・成形・具材充填を伴う米飯食品", "legalText": "製品区分や具材によって適用基準を確認。", "suggest": ["一般生菌数", "黄色ブドウ球菌", "セレウス（定性）"], "reason": "米飯の冷却・保管と手作業の両方を見る。"}, {"group": "惣菜・弁当", "name": "カレー・シチュー・煮物", "icon": "🍛", "summary": "大量調理・煮込み食品", "legalText": "製品区分に応じて確認。", "suggest": ["一般生菌数", "ウェルシュ（定性）", "セレウス（定性）"], "reason": "大量調理後の緩慢冷却・保温・再加熱がポイント。"}, {"group": "惣菜・弁当", "name": "サンドイッチ・調理パン", "icon": "🥪", "summary": "具材を挟み、加熱せず喫食することが多い食品", "legalText": "パン・具材・製造形態により適用基準を個別確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "リステリア"], "reason": "RTE、手作業、具材、冷蔵保存を考慮。"}, {"group": "大豆・発酵", "name": "豆腐", "icon": "⬜", "summary": "木綿・絹・充填豆腐等", "legalText": "豆腐には食品衛生法上の製造基準・保存基準があります。製品形態を確認。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）"], "reason": "製造水、加熱後工程、充填・水さらし、低温管理を確認。"}, {"group": "大豆・発酵", "name": "納豆", "icon": "🫘", "summary": "発酵大豆食品", "legalText": "顧客仕様・自主基準を確認し、発酵菌が多い食品であることを踏まえて検査目的を明確化。", "suggest": ["大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌"], "reason": "一般生菌数の単純評価が適さない場合があるため、目的を明確にする。"}, {"group": "大豆・発酵", "name": "味噌・発酵調味料", "icon": "🥣", "summary": "発酵・熟成食品", "legalText": "製品区分、顧客仕様、自主基準を確認。", "suggest": ["酵母", "真菌（カビ）", "大腸菌群"], "reason": "発酵由来菌と変敗菌を区別し、pH・Aw・塩分も考慮。"}, {"group": "漬物", "name": "漬物・浅漬", "icon": "🥒", "summary": "野菜の漬物・浅漬", "legalText": "製造方法、加熱殺菌の有無、包装・保存条件により確認事項が異なる。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌", "酵母"], "reason": "原料野菜、洗浄、漬込み、pH、低温管理を確認。"}, {"group": "菓子・パン", "name": "クッキー・焼菓子", "icon": "🍪", "summary": "低水分の焼菓子", "legalText": "製品区分・顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "真菌（カビ）", "酵母"], "reason": "加熱後汚染と保存性。Aw測定も有効な場合がある。"}, {"group": "菓子・パン", "name": "生菓子・洋菓子", "icon": "🍰", "summary": "ケーキ、クリーム菓子等", "legalText": "原材料・製造形態に応じて適用基準を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "真菌（カビ）", "酵母"], "reason": "卵・乳、手作業、クリーム、冷蔵保存を考慮。"}, {"group": "菓子・パン", "name": "パン・菓子パン", "icon": "🍞", "summary": "パン、具入りパン等", "legalText": "具材・製造形態に応じて個別確認。", "suggest": ["一般生菌数", "大腸菌群", "真菌（カビ）", "酵母"], "reason": "焼成後汚染、具材、包装、カビによる保存性を確認。"}, {"group": "乳・卵", "name": "牛乳・乳飲料・乳製品", "icon": "🥛", "summary": "乳、乳飲料、クリーム等", "legalText": "乳及び乳製品は食品衛生法上の個別規格があるため、製品の正式名称・区分を確認して項目を決める。", "suggest": ["一般生菌数", "大腸菌群"], "reason": "製品区分ごとの規格を優先し、必要に応じて自主検査を追加。"}, {"group": "乳・卵", "name": "卵・液卵・卵加工品", "icon": "🥚", "summary": "殻付卵、液卵、卵加工品", "legalText": "液卵等には食品衛生法上の基準があります。殺菌・未殺菌など製品区分を確認。", "suggest": ["サルモネラ", "一般生菌数", "大腸菌群"], "reason": "卵由来のサルモネラ、殺菌条件、低温管理を考慮。"}, {"group": "飲料・水", "name": "清涼飲料水", "icon": "🥤", "summary": "ジュース、茶飲料等", "legalText": "清涼飲料水には食品衛生法上の成分規格・製造基準・保存基準があります。製品タイプを確認。", "suggest": ["一般生菌数", "大腸菌群", "酵母", "真菌（カビ）"], "reason": "pH、殺菌、容器充填、保存性を製品タイプに応じて確認。"}, {"group": "飲料・水", "name": "ミネラルウォーター類", "icon": "💧", "summary": "容器包装された飲用水", "legalText": "ミネラルウォーター類は原水・殺菌方法等によって規格・製造基準が異なるため正式区分を確認。", "suggest": ["一般生菌数", "大腸菌群"], "reason": "原水、殺菌、充填環境を確認。"}, {"group": "野菜・果実", "name": "カット野菜・生野菜", "icon": "🥬", "summary": "洗浄・カットして非加熱で喫食", "legalText": "製品区分・顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌"], "reason": "土壌由来、洗浄水、カット工程、低温管理を確認。"}, {"group": "野菜・果実", "name": "カットフルーツ・果実", "icon": "🍎", "summary": "非加熱で喫食するカット果実", "legalText": "製品区分・加工方法・顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "酵母", "真菌（カビ）"], "reason": "カット工程、器具、低温管理、酵母・カビによる変敗を確認。"}, {"group": "RTE・保存", "name": "RTE（非加熱喫食調理済み食品）", "icon": "🥡", "summary": "製造後、基本的に再加熱せず喫食", "legalText": "食品の正式区分ごとの規格基準を優先。", "suggest": ["リステリア", "一般生菌数", "大腸菌群", "黄色ブドウ球菌"], "reason": "製造環境、加熱後汚染、冷蔵保存期間を考慮。"}, {"group": "RTE・保存", "name": "真空包装・低酸素包装食品", "icon": "🫙", "summary": "真空・ガス置換等で包装した食品", "legalText": "容器包装詰加圧加熱殺菌食品など法的区分に該当するかを確認。pH・Aw・殺菌・保存条件が重要。", "suggest": ["一般生菌数", "クロストリジア", "乳酸菌数"], "reason": "嫌気条件、pH、Aw、加熱条件、冷蔵の組合せで評価。"}, {"group": "RTE・保存", "name": "保存試験・賞味期限設定", "icon": "📅", "summary": "期限設定のため経時変化を確認", "legalText": "食品ごとの規格基準・顧客基準を満たすことを前提に、製品特性に応じて試験項目を設計。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "真菌（カビ）", "酵母"], "reason": "微生物だけでなくpH、Aw、官能等も製品に応じて組み合わせる。"}, {"group": "魚介・寿司", "name": "生食用かき", "icon": "🦪", "summary": "生食用として販売するかき", "legalText": "生食用かきには食品衛生法上の成分規格、加工基準、保存基準等があります。採取海域や加工方法も含め正式区分を確認。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "腸炎ビブリオ"], "reason": "法定基準を優先し、海域・加工・低温管理を確認。"}, {"group": "魚介・寿司", "name": "加熱用かき", "icon": "🦪", "summary": "加熱して喫食するかき", "legalText": "生食用かきとは区分が異なります。表示された加熱条件・加工方法、顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "腸炎ビブリオ"], "reason": "原料由来の危害と喫食時の十分な加熱を考慮。"}, {"group": "魚介・寿司", "name": "スモークサーモン", "icon": "🐟", "summary": "冷燻等を行った冷蔵RTE魚介製品", "legalText": "製品の製造方法、冷凍食品該当性、包装・保存条件等を確認。", "suggest": ["一般生菌数", "大腸菌群", "リステリア"], "reason": "RTE・冷蔵・加熱後工程を踏まえ、特にリステリアの危害分析を検討。"}, {"group": "魚介・寿司", "name": "いくら・魚卵加工品", "icon": "🟠", "summary": "いくら、すじこ等の魚卵製品", "legalText": "原料、塩蔵・醤油漬け、冷凍・冷蔵等の製品仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "リステリア"], "reason": "非加熱喫食、調味・充填、低温保存を考慮。"}, {"group": "食肉", "name": "ローストビーフ", "icon": "🥩", "summary": "加熱後に冷却し、薄切り等で喫食する食肉製品", "legalText": "食肉製品としての正式区分と加熱条件、保存基準を確認。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌", "リステリア"], "reason": "中心加熱、冷却、スライス工程、加熱後汚染を確認。"}, {"group": "食肉", "name": "生ハンバーグ・ひき肉製品", "icon": "🍖", "summary": "ひき肉を成形し、喫食前加熱する製品", "legalText": "原料肉・冷凍食品等の正式区分を確認し、喫食前の加熱条件を明確にする。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "O157", "サルモネラ"], "reason": "表面菌が内部へ入り得るため、原料管理と中心部までの加熱を重視。"}, {"group": "惣菜・弁当", "name": "ポテトサラダ・マカロニサラダ", "icon": "🥔", "summary": "加熱原料を冷却後に混合するサラダ", "legalText": "製品区分・原材料・顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌"], "reason": "加熱後の冷却、混合、手作業、冷蔵管理を確認。"}, {"group": "惣菜・弁当", "name": "卵焼き・だし巻き卵", "icon": "🍳", "summary": "卵を加熱した惣菜", "legalText": "製品区分、包装、保存条件等を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "サルモネラ"], "reason": "卵原料、加熱、加熱後の取扱い・冷却を確認。"}, {"group": "惣菜・弁当", "name": "唐揚げ・フライ類", "icon": "🍗", "summary": "揚げ物惣菜", "legalText": "原材料と製品区分、保存・販売条件を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌"], "reason": "加熱の確実性と、加熱後の盛付け・陳列を確認。"}, {"group": "惣菜・弁当", "name": "麺類（ゆで麺・調理麺）", "icon": "🍜", "summary": "うどん、そば、中華麺、パスタ等の調理済み麺", "legalText": "麺の種類、具材、包装、保存条件により確認事項が変わる。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "セレウス（定性）"], "reason": "ゆで後の冷却、盛付け、具材、保存温度を確認。"}, {"group": "惣菜・弁当", "name": "餃子・しゅうまい", "icon": "🥟", "summary": "食肉・野菜等を包んだ調理食品", "legalText": "冷凍食品かチルド品か、加熱済みか未加熱かで確認すべき基準が異なる。", "suggest": ["一般生菌数", "大腸菌（E. coli）", "サルモネラ", "黄色ブドウ球菌"], "reason": "ひき肉・野菜原料、成形工程、加熱条件を考慮。"}, {"group": "大豆・発酵", "name": "油揚げ・厚揚げ", "icon": "🟨", "summary": "豆腐を油で揚げた大豆加工品", "legalText": "製造方法、包装、保存条件、顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌"], "reason": "加熱後の冷却・包装・保存工程を確認。"}, {"group": "大豆・発酵", "name": "豆乳・豆乳飲料", "icon": "🥛", "summary": "大豆を原料とする飲料", "legalText": "製品の正式区分、殺菌・充填方法、保存条件を確認。", "suggest": ["一般生菌数", "大腸菌群", "酵母"], "reason": "加熱殺菌、充填、保存中の変敗を確認。"}, {"group": "漬物", "name": "キムチ", "icon": "🌶️", "summary": "発酵・非加熱の野菜加工品", "legalText": "製造方法、pH、包装、冷蔵条件、顧客仕様を確認。", "suggest": ["大腸菌群", "大腸菌（E. coli）", "酵母", "乳酸菌数"], "reason": "原料野菜と発酵由来菌を踏まえ、検査目的を明確にする。"}, {"group": "菓子・パン", "name": "和菓子（大福・まんじゅう等）", "icon": "🍡", "summary": "餅・あん等を使用する和菓子", "legalText": "原材料、加熱の有無、包装・保存条件、顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "真菌（カビ）", "酵母"], "reason": "加熱後の成形・充填、手作業、保存性を確認。"}, {"group": "菓子・パン", "name": "プリン・ゼリー", "icon": "🍮", "summary": "ゲル化・加熱充填等を行うデザート", "legalText": "乳・卵等の原材料、殺菌方法、容器包装、保存条件を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "酵母"], "reason": "加熱殺菌と充填後汚染、冷蔵保存を確認。"}, {"group": "菓子・パン", "name": "アイスクリーム類", "icon": "🍨", "summary": "アイスクリーム、アイスミルク、ラクトアイス等", "legalText": "乳等命令などによる製品区分ごとの成分規格・製造基準を確認。", "suggest": ["一般生菌数", "大腸菌群"], "reason": "法定区分を優先し、原料・殺菌・充填工程を確認。"}, {"group": "乳・卵", "name": "ヨーグルト・発酵乳", "icon": "🥣", "summary": "乳酸菌等で発酵させた乳製品", "legalText": "発酵乳等の正式区分に応じた成分規格・保存基準を確認。", "suggest": ["大腸菌群", "酵母", "真菌（カビ）", "乳酸菌数"], "reason": "有用菌が多い製品のため一般生菌数の単純評価を避け、変敗菌や規格項目を中心に考える。"}, {"group": "乳・卵", "name": "チーズ", "icon": "🧀", "summary": "ナチュラルチーズ・プロセスチーズ等", "legalText": "製品区分、加熱の有無、原料乳、保存条件等を確認。", "suggest": ["大腸菌群", "大腸菌（E. coli）", "リステリア", "真菌（カビ）", "酵母"], "reason": "製品タイプ、熟成、RTE、冷蔵保存を考慮。"}, {"group": "飲料・水", "name": "井戸水・飲用水", "icon": "🚰", "summary": "食品製造や飲用に使用する井戸水等", "legalText": "用途と適用法令・条例、飲用井戸等の衛生対策、食品製造用水としての要件を個別確認。", "suggest": ["一般生菌数", "大腸菌（E. coli）"], "reason": "微生物項目だけでなく、用途に応じた水質検査項目全体を確認。"}, {"group": "飲料・水", "name": "氷・食用氷", "icon": "🧊", "summary": "飲食用の氷、製氷した氷", "legalText": "氷雪や原水に関する食品衛生法上の基準、使用水の要件を確認。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）"], "reason": "原水、製氷機、保管・取扱いの衛生を確認。"}, {"group": "野菜・果実", "name": "冷凍野菜", "icon": "🥦", "summary": "冷凍した野菜・野菜加工品", "legalText": "冷凍食品の区分、加熱後摂取か無加熱摂取か、凍結直前の加熱有無を確認。", "suggest": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）"], "reason": "冷凍食品の正式区分と原料・前処理を確認。"}, {"group": "野菜・果実", "name": "加熱済み野菜・温野菜", "icon": "🥕", "summary": "ボイル・蒸し等の加熱済み野菜", "legalText": "冷蔵・冷凍、包装形態、喫食方法等を確認。", "suggest": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "リステリア"], "reason": "加熱後の冷却、包装、RTEとしての取扱いを確認。"}, {"group": "その他加工食品", "name": "ソース・たれ・ドレッシング", "icon": "🧴", "summary": "液状・半固体の調味食品", "legalText": "製品区分、pH、Aw、加熱・充填方法、保存条件を確認。", "suggest": ["一般生菌数", "大腸菌群", "酵母", "真菌（カビ）"], "reason": "酸性度、糖・塩濃度、加熱充填、開封後条件を考慮。"}, {"group": "その他加工食品", "name": "ジャム・フルーツソース", "icon": "🫙", "summary": "糖・酸を利用した果実加工品", "legalText": "製品区分、糖度、pH、加熱・充填方法、保存条件を確認。", "suggest": ["酵母", "真菌（カビ）", "一般生菌数"], "reason": "低pH・高糖度でも酵母やカビによる変敗を考慮。"}, {"group": "その他加工食品", "name": "乾燥食品・乾物", "icon": "🌾", "summary": "乾燥野菜、乾麺、粉末食品等", "legalText": "食品の正式区分、Aw、喫食方法、顧客仕様を確認。", "suggest": ["一般生菌数", "大腸菌群", "真菌（カビ）", "セレウス（定性）"], "reason": "低水分では増殖しにくくても菌が生残する可能性があり、原料と用途を考慮。"}];
+const cases=[{"title": "一般生菌数が高い", "icon": "📈", "summary": "菌数が高い・社内基準を超えた", "meaning": "特定の食中毒菌を示す結果ではありません。原料の菌数、製造時の衛生状態、加熱、加熱後汚染、冷却・保存などを工程全体で確認します。", "causes": ["原料由来の菌数が高い", "加熱条件が十分でない", "加熱後に器具・手指・環境から再汚染", "冷却に時間がかかった", "保存温度・保存期間が適切でない"], "checks": ["同一ロット・前後ロットの結果", "原料と製品の菌数比較", "加熱温度・時間の記録", "冷却時間と品温記録", "加熱後に触れる器具・設備の拭き取り"], "extra": ["大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌"], "talk": "一般生菌数が高いだけでは原因菌までは特定できません。まず原料、加熱、加熱後の取扱い、冷却・保存のどこで菌数が増えた可能性があるかを切り分けます。"}, {"title": "大腸菌群が陽性", "icon": "🧫", "summary": "大腸菌群が検出された", "meaning": "大腸菌群は衛生状態を見る指標の一つです。陽性＝糞便汚染、陽性＝大腸菌・O157という意味ではありません。加熱食品では加熱条件や加熱後の再汚染を考える手掛かりになります。", "causes": ["原料由来", "加熱不足・加熱むら", "加熱後の手指・器具からの再汚染", "洗浄・殺菌不足", "生原料との交差汚染"], "checks": ["その食品に大腸菌群の規格基準があるか", "加熱品か非加熱品か", "加熱記録", "加熱前後の工程分離", "器具・設備・手指の衛生状態"], "extra": ["大腸菌（E. coli）", "一般生菌数", "黄色ブドウ球菌"], "talk": "大腸菌群陽性だけで大腸菌や食中毒菌がいるとは言えません。加熱品なら、まず加熱が十分だったか、その後に再汚染する工程がなかったかを確認します。"}, {"title": "大腸菌（E. coli）が陽性", "icon": "⚠️", "summary": "E. coli が検出された", "meaning": "大腸菌群より糞便系汚染との関連が強い衛生指標です。ただしE. coli陽性だけでO157などの病原大腸菌と断定はできません。", "causes": ["原料由来", "水・手指・器具を介した汚染", "加熱不足", "生原料からの交差汚染"], "checks": ["食品の規格基準・顧客基準", "加熱条件", "使用水", "生・加熱済み区域の動線", "手指・器具の衛生"], "extra": ["O157", "病原大腸菌", "一般生菌数"], "talk": "E. coliが出たこととO157が出たことは同じではありません。食品の種類や目的に応じて病原大腸菌の追加検査が必要か判断します。"}, {"title": "黄色ブドウ球菌が検出", "icon": "🖐️", "summary": "人由来・加熱後工程を確認したい", "meaning": "人の皮膚や鼻腔などにも存在する菌で、手指などを介して食品を汚染することがあります。食品中で増殖し毒素を産生すると食中毒につながります。", "causes": ["素手や手袋を介した汚染", "手荒れ・傷・化膿創", "加熱後の手作業", "長時間の室温放置"], "checks": ["手洗い・手袋交換", "従事者の手荒れや傷", "加熱後の盛付け工程", "放冷時間・保管温度", "器具の洗浄殺菌"], "extra": ["一般生菌数", "大腸菌群"], "talk": "黄色ブドウ球菌が検出された場合は、特に加熱後の手作業と手指衛生、食品を増殖可能な温度帯に長く置いていなかったかを確認します。"}, {"title": "サルモネラが検出", "icon": "🐔", "summary": "鶏肉・卵・食肉などで重要", "meaning": "サルモネラ属菌は食中毒の原因菌です。検出時は原料、加熱、交差汚染を中心に原因工程を確認します。", "causes": ["汚染原料の持込み", "加熱不足・加熱むら", "生原料から加熱済み食品への交差汚染", "器具・設備を介した二次汚染"], "checks": ["原料ロット", "加熱温度・時間", "生・加熱済み区域の分離", "まな板・容器・器具の共用", "前後ロット"], "extra": ["一般生菌数", "大腸菌（E. coli）"], "talk": "サルモネラは食中毒菌なので、単なる衛生指標の陽性とは扱いが異なります。製品区分や基準を確認しながら、原料・加熱・交差汚染を速やかに調べます。"}, {"title": "カンピロバクターが検出", "icon": "🍗", "summary": "鶏肉などで重要", "meaning": "鶏などの消化管に存在する食中毒菌です。鶏肉では特に、加熱不足と生肉から他食品への交差汚染が重要です。", "causes": ["原料鶏肉の汚染", "中心部の加熱不足", "トング・まな板等からの交差汚染"], "checks": ["加熱条件", "生肉と調理済み食品の器具区分", "手洗い", "調理動線"], "extra": ["サルモネラ", "大腸菌（E. coli）"], "talk": "鶏肉では原料段階の汚染を前提に、十分な加熱と、生肉から調理済み食品へ菌を移さない工程管理を確認します。"}, {"title": "セレウス菌が検出", "icon": "🍚", "summary": "米飯・麺類など／芽胞形成菌", "meaning": "セレウス菌は芽胞を形成し、食品中で増殖して食中毒の原因になることがあります。加熱だけでなく加熱後の時間・温度管理が重要です。", "causes": ["原料由来", "加熱後の緩慢な冷却", "室温での長時間放置", "保存温度不良"], "checks": ["炊飯・加熱後から冷却までの時間", "冷却方法", "保管温度", "作り置き時間"], "extra": ["一般生菌数", "ウェルシュ（定性）"], "talk": "芽胞形成菌なので『加熱したから大丈夫』だけでは評価できません。加熱後に速やかに冷却し、増殖させない管理がポイントです。"}, {"title": "ウェルシュ菌が検出", "icon": "🍛", "summary": "煮込み・大量調理／冷却工程", "meaning": "芽胞を形成する菌で、大量調理した煮込み料理などでは加熱後の緩慢な冷却・保管中の増殖が問題になります。", "causes": ["大鍋のままゆっくり冷却", "加熱後の長時間放置", "不適切な保温・冷蔵"], "checks": ["小分け冷却の有無", "冷却時間・品温", "保温温度", "再加熱方法"], "extra": ["一般生菌数", "セレウス（定性）"], "talk": "ウェルシュ菌では大量調理後の冷却が大きな確認ポイントです。鍋のままゆっくり冷ましていないか、時間と温度を確認します。"}, {"title": "カビ・酵母が高い", "icon": "🍪", "summary": "保存性・包装・水分活性を確認", "meaning": "カビ・酵母は品質劣化や変敗に関係します。一般生菌数とは別に、製品の水分活性、pH、包装、保存条件などと合わせて評価します。", "causes": ["原料由来", "製造環境からの汚染", "包装不良", "結露・吸湿", "保存条件が製品特性に合っていない"], "checks": ["水分活性（Aw）", "pH", "包装状態", "保管湿度・温度", "環境・落下菌等の必要性"], "extra": ["真菌（カビ）", "酵母", "一般生菌数"], "talk": "カビや酵母は保存性の評価で重要です。菌数だけでなく、AwやpH、包装、保管条件と一緒に原因を考えます。"}, {"title": "リステリアが検出", "icon": "🥪", "summary": "RTE・冷蔵食品／製造環境", "meaning": "リステリア・モノサイトゲネスは低温でも増殖し得るため、RTE食品では製造環境、加熱後汚染、冷蔵保存期間が重要です。", "causes": ["原料由来", "製造環境からの汚染", "加熱後の再汚染", "長い冷蔵保存期間"], "checks": ["RTE食品か", "加熱工程の有無", "加熱後ゾーン・設備", "冷蔵温度と賞味期限", "環境拭き取りの必要性"], "extra": ["一般生菌数", "大腸菌群"], "talk": "リステリアは冷蔵でも増殖し得るため、RTE食品では製品検査だけでなく製造環境と加熱後工程の確認も重要です。"}];
+const processes=[{"name": "原料受入", "icon": "📦", "risk": "原料由来の菌を製造工程へ持ち込む入口。原料の種類、仕入先、温度、包装状態などを確認します。", "questions": ["どんな原料を使っているか", "受入時の品温・外観を確認しているか", "仕入先やロットを追跡できるか", "生食用と加熱用を区別しているか"], "tests": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "サルモネラ"], "swab": ["受入容器・コンテナ", "原料保管庫の取手・棚"], "point": "原料の検査値だけでなく、仕入先管理や受入基準とセットで考えます。"}, {"name": "下処理・カット", "icon": "🔪", "risk": "生原料、手指、包丁・まな板などを介した交差汚染が起こりやすい工程です。", "questions": ["生原料と加熱後食品で器具を分けているか", "器具の洗浄・殺菌方法は何か", "作業者の手洗い・手袋交換は適切か", "作業中の品温上昇はないか"], "tests": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "黄色ブドウ球菌"], "swab": ["まな板", "包丁", "作業台", "手袋・手指が触れる箇所"], "point": "製品検査だけで原因が分からない場合、器具・作業台の拭き取りが切り分けに役立ちます。"}, {"name": "加熱", "icon": "🔥", "risk": "加熱で低減させるべき微生物に対して、中心温度・時間・加熱むらが重要です。", "questions": ["加熱条件を決めているか", "中心温度をどこで測っているか", "最も温まりにくい場所を測っているか", "記録と温度計の管理はできているか"], "tests": ["一般生菌数", "大腸菌群", "大腸菌（E. coli）", "サルモネラ"], "swab": ["加熱前後で共用する器具があればその接触面"], "point": "『加熱した』ではなく、対象製品で必要な温度・時間が確実に達成されているかを記録で確認します。"}, {"name": "冷却", "icon": "❄️", "risk": "加熱後にゆっくり冷えると、残存した芽胞形成菌などが増殖する機会になります。", "questions": ["加熱終了から冷却開始まで何分か", "何℃から何℃まで何分で下がるか", "大鍋・大容器のまま冷ましていないか", "小分けや急速冷却をしているか"], "tests": ["セレウス（定性）", "ウェルシュ（定性）", "一般生菌数"], "swab": ["冷却機内部", "冷却後製品に触れる容器・器具"], "point": "冷却は『冷蔵庫に入れたか』だけでなく、実際の品温がどう下がったかを見るのが重要です。"}, {"name": "盛付け・手作業", "icon": "🖐️", "risk": "加熱後食品では、手指・手袋・器具・作業環境からの再汚染が重要になります。", "questions": ["加熱後に何回人が触れるか", "手袋交換のタイミングは決まっているか", "手荒れ・傷の管理はあるか", "生原料を扱う区域と分離されているか"], "tests": ["黄色ブドウ球菌", "大腸菌群", "一般生菌数"], "swab": ["作業台", "トング", "盛付け器具", "頻繁に触れる取手・スイッチ"], "point": "加熱後製品で大腸菌群などが出た場合、盛付け工程は優先して確認したいポイントです。"}, {"name": "包装", "icon": "📦", "risk": "包装直前・包装時の接触面や環境から再汚染する可能性があります。包装後の酸素条件も製品特性に影響します。", "questions": ["包装前の製品はどこに置かれるか", "包装機の食品接触部をどう洗浄しているか", "包装材を衛生的に保管しているか", "真空・ガス置換など特殊包装か"], "tests": ["一般生菌数", "大腸菌群", "リステリア"], "swab": ["包装機の食品接触部", "ベルト・ガイド", "包装台"], "point": "包装形態によって危害要因は変わるため、真空包装等では製品のpH・Aw・保存条件も合わせて確認します。"}, {"name": "冷蔵・保管", "icon": "🧊", "risk": "低温でも増殖可能な菌や、保存期間中の品質劣化を考える工程です。", "questions": ["実際の庫内温度は何℃か", "製品中心温度を確認しているか", "保存期間は何日か", "先入れ先出しができているか"], "tests": ["一般生菌数", "リステリア", "真菌（カビ）", "酵母"], "swab": ["冷蔵庫の棚", "取手", "排水周辺など環境確認が必要な箇所"], "point": "保存試験では初日だけでなく、設定した保存条件で経時的に菌数・官能等を見る考え方が重要です。"}, {"name": "洗浄・殺菌", "icon": "🧼", "risk": "洗浄不足、殺菌条件不足、洗浄後の再汚染があると製造環境が汚染源になります。", "questions": ["洗浄手順が標準化されているか", "洗剤・殺菌剤の濃度と接触時間は適切か", "分解洗浄が必要な箇所はないか", "洗浄後の確認方法は何か"], "tests": ["一般生菌数", "大腸菌群", "黄色ブドウ球菌", "リステリア"], "swab": ["食品接触面", "継ぎ目・裏側", "ベルト", "取手", "排水周辺"], "point": "拭き取り検査は『清掃できているか』の検証や、製品異常時の汚染源切り分けに使えます。"}, {"name": "配送・陳列", "icon": "🚚", "risk": "製造後の温度逸脱や長時間保管によって、微生物が増殖する可能性があります。", "questions": ["配送中の温度を記録しているか", "積込み・荷下ろしで長時間常温にならないか", "店舗での保管温度は適切か", "消費・賞味期限内の管理ができているか"], "tests": ["一般生菌数", "黄色ブドウ球菌", "リステリア"], "swab": ["必要に応じて配送容器・保冷設備"], "point": "製造時に問題がなくても、流通・保管条件で結果が変化する可能性があります。"}];
+let quote=[];
+const app=document.getElementById('app'), q=document.getElementById('q');
+function money(x){return x==null?'要確認':x.toLocaleString()+'円'}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function matches(t,s){s=s.trim().toLowerCase(); if(!s)return true; return (t.name+' '+t.cat+' '+t.foods+' '+t.feature+' '+t.when+' '+t.check+' '+t.tags).toLowerCase().includes(s)}
+function showList(){
+ setTab('tabTests');
+ const arr=tests.filter(t=>matches(t,q.value));
+ app.innerHTML='<div class="hint">'+arr.length+'件表示　※料金・納期は社内資料の確定値を優先</div>'+ (arr.length?arr.map((t,i)=>`
+ <div class="card" onclick="showDetail(${tests.indexOf(t)})">
+  <div class="row"><div class="name">${esc(t.name)}</div><span class="badge">${esc(t.cat)}</span></div>
+  <div class="meta"><span class="pill">料金 ${money(t.price)}</span><span class="pill">報告 ${esc(t.days)}</span></div>
+  <div style="font-size:13px;color:#5e6c7b;margin-top:9px">${esc(t.foods)}</div>
+ </div>`).join(''):'<div class="empty">該当する検査がありません</div>');
+}
+function showDetail(i){
+ const t=tests[i]; app.innerHTML=`<button class="back" onclick="showList()">← 一覧へ</button>
+ <div class="card detail"><div class="row"><h2>${esc(t.name)}</h2><span class="badge">${esc(t.cat)}</span></div>
+ <div class="meta"><span class="pill price">${money(t.price)}</span><span class="pill">報告 ${esc(t.days)}</span></div>
+ <h3>主に検討する食品・場面</h3><p>${esc(t.foods)}</p>
+ <h3>検査の特徴</h3><p>${esc(t.feature)}</p>
+ <h3>どんなときに検査する？</h3><p>${esc(t.when)}</p>
+ <h3>検出・高値だった場合の考え方</h3><p>${esc(t.positive)}</p>
+ <h3>工程で確認するポイント</h3><p>${esc(t.check)}</p>
+ <h3>営業での説明例</h3><p>${esc(t.talk)}</p>
+ <div class="actions"><button class="primary" onclick="addQuote(${i})">＋ 見積りに追加</button></div>
+ <div class="note">注意：検査結果の評価は食品の種類、製造工程、法令上の規格基準、顧客仕様、自主基準、試験法などで変わります。この画面だけで適否を断定しないでください。</div>
+ <h3>公的情報</h3><p><a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/syokuchu/saikin.html" target="_blank">厚生労働省：細菌による食中毒</a><br><a href="https://www.fsc.go.jp/foodsafetyinfo_map/foodhazinfohub/foodhazinfohub_bio.html" target="_blank">食品安全委員会：微生物等</a></p>
+ </div>`;
+}
+
+function setTab(id){
+ ['tabTests','tabFoods','tabProcess','tabCases','tabQuote'].forEach(x=>document.getElementById(x)?.classList.remove('active'));
+ document.getElementById(id)?.classList.add('active');
+}
+function showFoods(){
+ setTab('tabFoods');
+ const groups=[...new Set(foods.map(f=>f.group))];
+ app.innerHTML=`<div class="hint">${foods.length}カテゴリー収録。食品名・グループから探せます。</div>
+ <input id="foodQ" placeholder="食品を検索（例：豆腐、寿司、菓子、飲料）" oninput="filterFoods(this.value)">
+ <div id="foodArea">${renderFoods(foods,groups)}</div>
+ <div class="note">「自主検査候補」は一般的な危害要因からの候補で、法的必須項目を意味しません。正式提案前に食品の法的区分、工程、原材料、喫食方法、顧客仕様を確認してください。</div>`;
+}
+function renderFoods(arr,groups){
+ return groups.map(g=>{const xs=arr.filter(f=>f.group===g);if(!xs.length)return '';return `<h3 style="margin:18px 3px 6px">${esc(g)}</h3><div class="foodGrid">${xs.map(f=>{let i=foods.indexOf(f);return `<button type="button" class="foodTap" onclick="showFood(${i})"><span class="foodTapTitle">${f.icon} ${esc(f.name)}</span><span class="foodTapSub">${esc(f.summary)}</span></button>`}).join('')}</div>`}).join('');
+}
+function filterFoods(s){
+ s=s.trim().toLowerCase(); const arr=!s?foods:foods.filter(f=>(f.name+' '+f.group+' '+f.summary+' '+f.reason).toLowerCase().includes(s));
+ const groups=[...new Set(foods.map(f=>f.group))];
+ document.getElementById('foodArea').innerHTML=arr.length?renderFoods(arr,groups):'<div class="empty">該当する食品がありません</div>';
+}
+
+function findTest(name){
+ return tests.findIndex(t=>t.name===name || t.name.startsWith(name));
+}
+function addNamed(name){
+ const i=findTest(name); if(i>=0 && !quote.includes(i)) quote.push(i);
+ updateCount();
+}
+function addFoodSuggestions(i){
+ foods[i].suggest.forEach(addNamed); showQuote();
+}
+function foodTestPriority(f,n){
+ const name=f.name;
+ if(name==='鶏肉・鶏肉加工品'){
+  if(n.includes('カンピロバクター')) return {label:'△ 条件で優先',cls:'priorityCond',note:'鶏肉では重要な危害要因。特に内臓摘出・レバー/砂肝処理・解体・腸管内容物との接触・生肉の交差汚染がある施設では優先度が上がります。'};
+  if(n.includes('サルモネラ')) return {label:'◎ 優先度高い',cls:'priorityHigh',note:'生の鶏肉・鶏由来原料を扱う場合は重要な危害要因として確認。'};
+  return {label:'○ 衛生確認',cls:'priorityBase',note:'製品・工程の衛生状態を確認する候補。'};
+ }
+ if(/RTE|サンドイッチ|ローストビーフ|スモークサーモン|加熱済み野菜/.test(name) && n.includes('リステリア'))
+  return {label:'△ 条件で優先',cls:'priorityCond',note:'加熱後に再加熱せず喫食し、冷蔵で保存期間がある場合は優先度が上がります。'};
+ if(/おにぎり|ポテトサラダ|和菓子|生菓子|卵焼き|唐揚げ/.test(name) && n.includes('黄色ブドウ球菌'))
+  return {label:'△ 手作業で優先',cls:'priorityCond',note:'加熱後の手作業・成形・盛付けが多いほど優先度が上がります。'};
+ if(/カレー|シチュー|煮物/.test(name) && (n.includes('ウェルシュ')||n.includes('セレウス')))
+  return {label:'△ 冷却条件で優先',cls:'priorityCond',note:'大量調理後にゆっくり冷却する、保温が長い、再加熱を繰り返す場合に優先度が上がります。'};
+ if(/米飯|麺類/.test(name) && n.includes('セレウス'))
+  return {label:'△ 冷却条件で優先',cls:'priorityCond',note:'加熱後の放冷・室温滞留・冷却に時間がかかる場合は優先度が上がります。'};
+ if(/クッキー|焼菓子|パン|乾燥|ジャム|フルーツソース/.test(name) && (n.includes('真菌')||n.includes('酵母')))
+  return {label:'△ 保存性で優先',cls:'priorityCond',note:'長い賞味期限、包装内の結露・吸湿、AwやpH条件によって優先度が上がります。'};
+ if(/卵|液卵|卵焼き/.test(name) && n.includes('サルモネラ'))
+  return {label:'△ 原料条件で優先',cls:'priorityCond',note:'未殺菌液卵、生・半熟使用、加熱条件の確認が必要な場合は優先度が上がります。'};
+ if(/真空包装|低酸素/.test(name) && n.includes('クロストリジア'))
+  return {label:'△ 製品条件で優先',cls:'priorityCond',note:'低酸素包装で、pH・Aw・加熱・冷蔵条件による増殖抑制を十分に説明できない場合は優先度が上がります。'};
+ if(/刺身|生食用|寿司|かき|魚卵/.test(name) && n.includes('腸炎ビブリオ'))
+  return {label:'△ 海産生食で優先',cls:'priorityCond',note:'海産魚介を生・非加熱で扱い、加工・洗浄・低温管理を確認したい場合に優先度が上がります。'};
+ return {label:'○ 基本候補',cls:'priorityBase',note:'食品・工程・顧客仕様に応じて採否を判断する候補です。'};
+}
+function conditionalAdvice(f){
+ const n=f.name, a=[];
+ if(n==='鶏肉・鶏肉加工品'){
+  a.push({test:'カンピロバクター（定性）',title:'内臓処理・解体をしている',text:'内臓摘出、レバー・砂肝処理、腸管内容物との接触がある場合は、処理工程で肉や他の内臓へ汚染が広がる可能性があるため、カンピロバクター確認の優先度を上げます。内臓処理がなくても鶏肉では重要な危害要因ですが、こうした工程があると工程検証としての意味がさらに大きくなります。'});
+  a.push({test:'カンピロバクター（定性）',title:'生肉と加熱後製品の動線が交差する',text:'生肉用の手指・器具・作業台・冷蔵庫などからRTEや加熱後製品への交差汚染を確認したい場合は、製品検査に加えて器具・設備の拭き取りも検討します。'});
+  a.push({test:'サルモネラ',title:'生の鶏原料を工場内で扱う',text:'原料由来の危害を想定し、加熱前原料・加熱工程・加熱後区域の分離まで含めて確認します。'});
+ }
+ if(/牛肉|生ハンバーグ|ひき肉/.test(n)) a.push({test:'O157',title:'ひき肉・成形・生食に近い工程がある',text:'表面の汚染が内部へ入りやすい工程や、生食・加熱不十分の可能性がある製品では、腸管出血性大腸菌の危害分析を優先します。'});
+ if(/豚肉/.test(n)) a.push({test:'サルモネラ',title:'生原料を加工し加熱前後が近接する',text:'原料由来の病原菌と加熱後への交差汚染を切り分ける目的で優先度が上がります。'});
+ if(/RTE|サンドイッチ|ローストビーフ|スモークサーモン|加熱済み野菜|いくら/.test(n)) a.push({test:'リステリア',title:'加熱後に再加熱せず、冷蔵で日持ちさせる',text:'加熱後のスライス・充填・包装や製造環境からの汚染と、冷蔵中の増殖を考慮して優先度を上げます。環境拭き取りも有効です。'});
+ if(/弁当|サラダ|おにぎり|サンドイッチ|ポテトサラダ|和菓子|生菓子|卵焼き|唐揚げ|寿司/.test(n)) a.push({test:'黄色ブドウ球菌',title:'加熱後に手作業が多い',text:'成形・盛付け・トッピング・むき身など、人の手が入る工程が多いほど手指由来汚染の確認価値が上がります。放冷時間も合わせて確認します。'});
+ if(/カレー|シチュー|煮物/.test(n)) a.push({test:'ウェルシュ（定性）',title:'大鍋調理・緩慢冷却・長時間保温がある',text:'芽胞が加熱後に生き残り、ゆっくり冷える間に増殖する可能性を考えるため、冷却条件の検証と合わせて優先します。'});
+ if(/おにぎり|米飯|麺類/.test(n)) a.push({test:'セレウス（定性）',title:'炊飯・ゆで後に常温滞留や緩慢冷却がある',text:'芽胞形成菌なので、加熱の有無だけでなく、加熱後にどれだけ早く冷やし、何℃帯にどれだけ滞留したかを重視します。'});
+ if(/クッキー|焼菓子|パン|乾燥|ジャム|フルーツソース|味噌|発酵調味料|カットフルーツ/.test(n)) a.push({test:'真菌（カビ）・酵母',title:'長期保存・結露・吸湿・包装トラブルがある',text:'一般生菌数が低くてもカビ・酵母が保存性を左右することがあります。Aw、pH、包装材、結露、保管湿度とセットで考えます。'});
+ if(/真空包装|低酸素包装/.test(n)) a.push({test:'クロストリジア',title:'低酸素包装で長期保存する',text:'嫌気条件になるため、pH・Aw・加熱条件・冷蔵条件の組合せで増殖抑制が成立しているかを確認し、必要に応じて嫌気性芽胞菌を検討します。'});
+ if(/卵|液卵/.test(n)) a.push({test:'サルモネラ',title:'未殺菌液卵・生または半熟用途がある',text:'原料由来リスクが高くなるため、原料仕様・殺菌の有無・加熱条件・低温管理と合わせて優先します。'});
+ if(/刺身|生食用冷凍鮮魚介類|寿司|ゆでだこ|ゆでがに|かき/.test(n)) a.push({test:'腸炎ビブリオ',title:'海産魚介を生・非加熱で扱う',text:'原料、洗浄水、低温管理、加工器具からの二次汚染を確認したい場合に優先します。加熱済み品では加熱後工程も確認します。'});
+ if(/豆腐|油揚げ|厚揚げ|豆乳/.test(n)) a.push({test:'大腸菌群',title:'加熱後に水さらし・冷却・充填・包装工程がある',text:'加熱後工程での水・器具・充填設備からの再汚染を確認したい場合に有効です。'});
+ if(/井戸水|飲用水|ミネラルウォーター|氷/.test(n)) a.push({test:'大腸菌（E. coli）',title:'井戸水・地下水・製造用水を使用する',text:'水由来の衛生リスクを確認します。微生物だけでなく、用途に応じた水質検査項目全体も確認してください。'});
+ if(/保存試験/.test(n)) a.push({test:'製品特性に合わせて選択',title:'賞味期限を延ばしたい・保存条件を変える',text:'一般生菌だけでなく、食品ごとにカビ・酵母・乳酸菌・芽胞菌、pH、Aw、官能を組み合わせて設計します。'});
+ if(!a.length){
+  if(f.group==='冷凍食品') a.push({test:'製品区分に応じて選択',title:'凍結直前の加熱有無・喫食前加熱の有無が違う',text:'同じ冷凍食品でも区分により見るべき指標や危害が変わります。製造時の加熱と喫食方法を先に確認します。'});
+  else if(f.group==='漬物') a.push({test:'大腸菌群・酵母など',title:'非加熱・浅漬け・低塩・短時間漬け',text:'原料野菜由来の汚染と、pH・塩分・低温管理の影響が大きくなるため、工程条件で検査候補を調整します。'});
+  else if(f.group==='乳・卵') a.push({test:'製品区分に応じて選択',title:'殺菌・発酵・熟成条件が異なる',text:'有用菌が多い製品では一般生菌の単純評価を避け、規格項目・変敗菌・RTEリスクを分けて考えます。'});
+  else if(f.group==='飲料・水') a.push({test:'酵母・カビなど',title:'低pHでも長期保存・開封後使用がある',text:'酸性でも酵母・カビによる変敗が起こり得るため、殺菌・充填・包装・保存条件で追加検査を判断します。'});
+  else a.push({test:'工程に応じて追加',title:'加熱後の手作業・冷却・包装・長期保存がある',text:'食品名だけで固定せず、原料、加熱、加熱後汚染、冷却、包装、保存のどこにリスクがあるかで検査項目を追加します。'});
+ }
+ return a;
+}
+function conditionalAdviceHtml(f){
+ const a=conditionalAdvice(f);
+ return a.map(x=>`<div class="condBox"><div class="condHead">${esc(x.title)} <span class="priorityCond">${esc(x.test)}</span></div><div class="condText">${esc(x.text)}</div></div>`).join('');
+}
+function showFood(i){
+ const f=foods[i];
+ const sug=f.suggest.map(n=>{let ti=findTest(n);if(ti<0)return '';const pr=foodTestPriority(f,n);return `<div class="card" onclick="showDetail(${ti})"><div class="row"><b>${esc(tests[ti].name)}</b><span class="${pr.cls}">${esc(pr.label)}</span></div><div class="meta"><span class="pill">${money(tests[ti].price)}</span><span class="pill">報告 ${esc(tests[ti].days)}</span></div><div style="font-size:12px;color:#637386;margin-top:8px;line-height:1.55">${esc(pr.note)}</div></div>`}).join('');
+ app.innerHTML=`<button class="back" onclick="showFoods()">← 食品一覧へ</button><div class="card detail">
+ <h2>${f.icon} ${esc(f.name)}</h2><p>${esc(f.summary)}</p>
+ <h3>規格基準・確認事項</h3><p>${esc(f.legalText)}</p>
+ <h3>検査候補と優先度</h3><p>${esc(f.reason)}</p>${sug}
+ <h3>🔍 製造条件で変わる検査</h3>${conditionalAdviceHtml(f)}
+ <div class="actions"><button class="primary" onclick="foodResultGuide(${i})">🧭 この食品で結果を考える</button><button onclick="addFoodSuggestions(${i})">候補をまとめて見積りへ</button></div>
+ <div class="note">「条件で優先」は、その検査が常に必須という意味ではありません。食品の正式区分、原材料、工程、喫食方法、HACCP上の危害分析、顧客仕様を確認して採否を決めてください。</div>
+ <h3>公的資料</h3><p><a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/jigyousya/shokuhin_kikaku/index.html" target="_blank">食品別の規格基準について</a><br><a href="https://www.fsc.go.jp/foodsafetyinfo_map/foodhazinfohub/foodhazinfohub_bio.html" target="_blank">食品安全委員会：微生物等</a>${f.name==='鶏肉・鶏肉加工品'?'<br><a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/syokuchu/campylobacterqa.html" target="_blank">厚生労働省：カンピロバクターQ&A</a><br><a href="https://www.fsc.go.jp/iinkai/20shunen/03_campylobacter.html" target="_blank">食品安全委員会：食鳥処理とカンピロバクター</a>':''}</p>
+ </div>`;
+}
+
+
+function foodResultGuide(foodIndex){
+ const f=foods[foodIndex];
+ const opts=f.suggest.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+ app.innerHTML=`<button class="back" onclick="showFood(${foodIndex})">← ${esc(f.name)}へ</button>
+ <div class="card detail"><h2>🧭 ${esc(f.name)}：結果の見方</h2>
+ <p>検査項目と結果を選ぶと、この食品での考え方と次の確認ポイントを表示します。</p>
+ <label><b>検査項目</b></label><select id="rgTest">${opts}</select>
+ <label><b>結果</b></label><select id="rgResult"><option>陽性・検出</option><option>菌数が高い</option><option>社内基準超過</option><option>前回より増加</option></select>
+ <button class="primary" style="margin-top:12px" onclick="renderFoodResult(${foodIndex})">結果を確認</button>
+ <div id="rgOut"></div>
+ <div class="note">数値の合否は、食品の正式区分に適用される法令上の規格基準または各社の自主基準で判断してください。この機能は原因を断定するものではありません。</div></div>`;
+}
+function resultLogic(food,test,result){
+ let meaning='', causes=[], next=[], talk='';
+ const cooked=/加熱|焼菓子|煮物|カレー|ハム|ソーセージ|ベーコン|豆腐|ゆで/.test(food.name);
+ const rte=/RTE|寿司|刺身|サラダ|サンド|おにぎり|生食|カット/.test(food.name);
+ if(test.includes('大腸菌群')){
+  meaning='大腸菌群は衛生状態を見る指標の一つです。陽性だけで糞便汚染やO157を意味するわけではありません。';
+  causes=cooked?['加熱条件・加熱むら','加熱後の器具・手指からの再汚染','洗浄・殺菌不足']:['原料由来','洗浄水や器具からの汚染','取扱い中の二次汚染'];
+  next=['その食品に大腸菌群の法的規格があるか確認','同一ロット・前後ロットを確認','工程別または器具の拭き取りで切り分け'];
+  talk='大腸菌群が出たことだけで食中毒菌がいるとは言えません。食品区分を確認した上で、'+(cooked?'加熱と加熱後工程':'原料・洗浄・取扱工程')+'を順に確認します。';
+ } else if(test.includes('大腸菌') || test.includes('O157')){
+  meaning=test.includes('O157')?'O157は腸管出血性大腸菌として重要な病原菌です。':'E. coliは大腸菌群より糞便系汚染との関連が強い指標ですが、陽性だけでO157を意味しません。';
+  causes=['原料由来','加熱不足','生原料・手指・器具からの交差汚染'];
+  next=['食品区分と規格基準を確認','加熱記録・使用水・作業動線を確認','必要に応じて病原大腸菌等の追加検査を検討'];
+  talk='まず製品区分と基準を確認し、原料・加熱・交差汚染のどこに可能性があるかを切り分けます。';
+ } else if(test.includes('一般生菌')){
+  meaning='一般生菌数は食品の微生物学的な状態を見る指標ですが、数値だけで特定の食中毒菌の存在は判断できません。';
+  causes=['原料菌数が高い','加熱不足または加熱後汚染','冷却・保存中の増殖'];
+  next=['原料と製品を比較','加熱・冷却・保存温度記録を確認','大腸菌群等と合わせて工程を評価'];
+  talk='菌数が高い原因は一つとは限らないので、原料、加熱、加熱後、冷却・保存の順に確認します。';
+ } else if(test.includes('黄色ブドウ')){
+  meaning='人の皮膚や鼻腔などにも存在する菌で、手作業や加熱後工程の衛生確認に重要です。';
+  causes=['手指・手袋からの汚染','加熱後の盛付け工程','温度管理不良による増殖'];
+  next=['手洗い・手袋交換を確認','手荒れ・傷の管理を確認','放冷・保管時間と温度を確認'];
+  talk='特に加熱後の手作業と、菌を増やさない時間・温度管理を確認します。';
+ } else if(test.includes('サルモネラ')||test.includes('カンピロ')){
+  meaning='食中毒原因菌として扱う必要がある項目です。';
+  causes=['原料由来','加熱不足','生原料からの交差汚染'];
+  next=['該当する規格・顧客基準を確認','原料ロットと加熱記録を確認','生・加熱済み区域や器具の分離を確認'];
+  talk='衛生指標菌とは扱いが異なるため、基準を確認しながら原料・加熱・交差汚染を優先して調べます。';
+ } else if(test.includes('セレウス')||test.includes('ウェルシュ')||test.includes('クロストリジア')){
+  meaning='芽胞形成菌を考慮する項目です。加熱だけでなく、加熱後の冷却・保管条件が重要です。';
+  causes=['原料由来の芽胞','緩慢な冷却','不適切な保温・保存'];
+  next=['加熱後の品温推移を確認','小分け・急速冷却の有無を確認','保管時間・温度を確認'];
+  talk='加熱したかだけでなく、加熱後に増殖させない管理ができていたかを確認します。';
+ } else if(test.includes('真菌')||test.includes('酵母')){
+  meaning='主に保存性や変敗の評価に関係します。';
+  causes=['原料・環境由来','包装後の吸湿・結露','保存条件不良'];
+  next=['Aw・pHを確認','包装状態を確認','保存温度・期間と製造環境を確認'];
+  talk='菌数だけでなくAw、pH、包装、保存条件と組み合わせて評価します。';
+ } else if(test.includes('リステリア')){
+  meaning='低温でも増殖し得るため、特にRTE・冷蔵食品では重要な危害要因です。';
+  causes=['原料由来','製造環境からの汚染','加熱後の再汚染','長期冷蔵中の増殖'];
+  next=['RTE食品か確認','加熱後ゾーン・設備を確認','冷蔵温度と期限設定を確認','環境拭き取りを検討'];
+  talk='製品だけでなく、加熱後の製造環境と冷蔵保存条件も合わせて確認します。';
+ } else {
+  meaning='この結果は食品の種類・工程・基準と合わせて評価する必要があります。';
+  causes=['原料由来','製造工程由来','保存・流通条件'];
+  next=['適用基準を確認','工程記録を確認','再検査や工程別検査を検討'];
+  talk='結果だけで原因を決めず、製品特性と工程から順に切り分けます。';
+ }
+ return {meaning,causes,next,talk};
+}
+function renderFoodResult(i){
+ const f=foods[i], t=document.getElementById('rgTest').value, r=document.getElementById('rgResult').value;
+ const g=resultLogic(f,t,r);
+ document.getElementById('rgOut').innerHTML=`<hr><h3>${esc(t)}：${esc(r)}</h3>
+ <h3>① まずどう見る？</h3><div class="step"><p>${esc(g.meaning)}</p></div>
+ <h3>② 考えられる原因</h3>${g.causes.map(x=>`<div class="step"><p>${esc(x)}</p></div>`).join('')}
+ <h3>③ 次に確認すること</h3>${g.next.map(x=>`<div class="step"><p>${esc(x)}</p></div>`).join('')}
+ <h3>④ お客様への説明例</h3><div class="step"><p>${esc(g.talk)}</p></div>`;
+}
+
+function showProcesses(){
+ setTab('tabProcess');
+ app.innerHTML=`<div class="hint">製造工程から、リスク・確認質問・検査候補・拭き取り候補を確認できます。</div>
+ ${processes.map((p,i)=>`<div class="caseCard" onclick="showProcess(${i})"><div><span class="caseIcon">${p.icon}</span><span class="name">${esc(p.name)}</span></div><div style="font-size:13px;color:#637386;margin-top:8px">${esc(p.risk)}</div></div>`).join('')}
+ <div class="note">表示する検査は一般的な候補です。食品の種類、工程、法令上の規格基準、顧客仕様、HACCPプランにより必要性は変わります。</div>`;
+}
+function showProcess(i){
+ const p=processes[i];
+ const testchips=p.tests.map(n=>{let ti=findTest(n);return ti>=0?`<span class="chip" onclick="event.stopPropagation();showDetail(${ti})">${esc(tests[ti].name)} →</span>`:`<span class="chip">${esc(n)}</span>`}).join('');
+ app.innerHTML=`<button class="back" onclick="showProcesses()">← 工程一覧へ</button><div class="card detail">
+ <h2>${p.icon} ${esc(p.name)}</h2>
+ <h3>この工程のポイント</h3><div class="step"><p>${esc(p.risk)}</p></div>
+ <h3>お客様に聞くこと</h3>${p.questions.map(x=>`<div class="step"><p>${esc(x)}</p></div>`).join('')}
+ <h3>検査候補</h3><div>${testchips}</div>
+ <h3>拭き取り候補</h3>${p.swab.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}
+ <h3>営業で押さえるポイント</h3><div class="step"><p>${esc(p.point)}</p></div>
+ <div class="actions"><button class="primary" onclick="addProcessTests(${i})">検査候補を見積りへ</button></div>
+ <div class="note">工程から原因を断定するものではありません。異常値が出た場合は、製品検査だけでなく工程記録、再検査、工程別検査、拭き取り検査などを組み合わせて切り分けます。</div>
+ </div>`;
+}
+function addProcessTests(i){
+ processes[i].tests.forEach(addNamed); showQuote();
+}
+
+function showCases(){
+ setTab('tabCases');
+ app.innerHTML=`<div class="hint">検査結果から、原因の切り分け・確認工程・追加検査候補を確認できます。</div>
+ ${cases.map((c,i)=>`<div class="caseCard" onclick="showCase(${i})"><div class="row"><div><span class="caseIcon">${c.icon}</span><span class="name">${esc(c.title)}</span></div></div><div style="font-size:13px;color:#637386;margin-top:8px">${esc(c.summary)}</div></div>`).join('')}
+ <div class="note">この逆引きは原因を断定する機能ではありません。検査結果は食品区分、製造工程、採取条件、規格基準・顧客基準などと合わせて評価してください。</div>`;
+}
+function showCase(i){
+ const c=cases[i];
+ const extras=c.extra.map(n=>{let ti=findTest(n);return ti>=0?`<span class="chip" onclick="event.stopPropagation();showDetail(${ti})">${esc(tests[ti].name)} →</span>`:`<span class="chip">${esc(n)}</span>`}).join('');
+ app.innerHTML=`<button class="back" onclick="showCases()">← 逆引き一覧へ</button>
+ <div class="card detail"><h2>${c.icon} ${esc(c.title)}</h2><p>${esc(c.summary)}</p>
+ <h3>① この結果から言えること</h3><div class="step"><p>${esc(c.meaning)}</p></div>
+ <h3>② 考えられる原因</h3>${c.causes.map(x=>`<div class="step"><p>${esc(x)}</p></div>`).join('')}
+ <h3>③ 現場で確認するポイント</h3>${c.checks.map(x=>`<div class="step"><p>${esc(x)}</p></div>`).join('')}
+ <h3>④ 追加検査の候補</h3><div>${extras}</div>
+ <h3>⑤ お客様への説明例</h3><div class="step"><p>${esc(c.talk)}</p></div>
+ <div class="note">「考えられる原因」は可能性の整理であり、検査結果だけから原因を断定するものではありません。必要に応じて再検査、工程別検査、拭き取り検査などで切り分けます。</div>
+ <h3>公的情報</h3><p><a href="https://www.fsc.go.jp/foodsafetyinfo_map/foodhazinfohub/foodhazinfohub_bio.html" target="_blank">食品安全委員会：微生物等</a><br><a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/syokuchu/saikin.html" target="_blank">厚生労働省：細菌による食中毒</a></p>
+ </div>`;
+}
+
+function addQuote(i){if(!quote.includes(i))quote.push(i);updateCount();showQuote()}
+function removeQuote(i){quote=quote.filter(x=>x!==i);updateCount();showQuote()}
+function updateCount(){document.getElementById('count').textContent=quote.length?'('+quote.length+')':''}
+function dayRank(s){let nums=(s.match(/\d+/g)||[]).map(Number);return nums.length?Math.max(...nums):0}
+function showQuote(){
+ setTab('tabQuote');
+ if(!quote.length){app.innerHTML='<div class="card empty">まだ検査項目が追加されていません。<br>「検査」から項目を追加してください。</div>';return}
+ let total=quote.reduce((a,i)=>a+(tests[i].price||0),0), unknown=quote.some(i=>tests[i].price==null);
+ let max=Math.max(...quote.map(i=>dayRank(tests[i].days)));
+ app.innerHTML=`<div class="card"><h2 style="margin-top:0">見積りリスト</h2>${quote.map(i=>`<div class="quoteItem"><div><b>${esc(tests[i].name)}</b><br><small>報告 ${esc(tests[i].days)}</small></div><div style="text-align:right">${money(tests[i].price)}<br><button class="secondary" onclick="removeQuote(${i})">削除</button></div></div>`).join('')}
+ <div class="total">合計 ${total.toLocaleString()}円${unknown?' ＋ 要確認項目':''}</div>
+ <div style="margin-top:6px">最長報告目安：<b>${max?max+'日':'要確認'}</b></div>
+ <div class="note">税区分・セット料金・検体数・試験法などにより実際の見積額や納期が変わる場合があります。正式見積り前に社内資料で確認してください。</div></div>`;
+}
+q.addEventListener('input',showList); q.addEventListener('search',showList);
+showList();updateCount();
+</script></body></html>
