@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>食品検査ポケット v2.0.1</title>
+<title>食品検査ポケット v2.0.2</title>
 <style>
 *{box-sizing:border-box} body{margin:0;background:#f4f7fb;color:#18212f;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
 header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #dce4ee;padding:14px 16px 10px}
@@ -50,6 +50,13 @@ select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #cfd9e6;border
 }
 .appBackFixed.show{display:flex}
 
+
+.modelPick{
+ cursor:pointer;border:1px solid #d7e6f7;background:#f8fbff;
+ transition:transform .08s ease,box-shadow .08s ease;
+}
+.modelPick:active{transform:scale(.99)}
+.modelPickHint{margin-top:8px;font-size:12px;font-weight:800;color:#1677c8}
 </style>
 <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=201">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-180x180.png?v=201">
@@ -62,7 +69,7 @@ select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #cfd9e6;border
 <meta name="apple-mobile-web-app-title" content="食品検査ポケット">
 
 </head><body>
-<header><h1>🧪 食品検査ポケット <span style="font-size:11px;color:#789">v2.0.1</span></h1><div class="search"><input id="q" placeholder="検査名・食品・工程で検索（例：鶏肉、冷却）"></div></header>
+<header><h1>🧪 食品検査ポケット <span style="font-size:11px;color:#789">v2.0.2</span></h1><div class="search"><input id="q" placeholder="検査名・食品・工程で検索（例：鶏肉、冷却）"></div></header>
 <main id="app"></main>
 <button id="appBackFixed" class="appBackFixed" onclick="appBack()">← 戻る</button>
 <nav>
@@ -74,7 +81,7 @@ select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #cfd9e6;border
 </nav>
 <script>
 
-// ----- app navigation history (v2.0.1) -----
+// ----- app navigation history (v2.0.2) -----
 let appNavCurrent=null;
 let appNavStack=[];
 let appNavGoingBack=false;
@@ -412,14 +419,47 @@ function modelTestChips(arr){
  if(!arr.length) return '<span class="muted">該当なし／製品条件で判断</span>';
  return arr.map(n=>{
   const i=findTest(n);
-  return i>=0?`<span class="chip" onclick="showDetail(${i})">${esc(tests[i].name)} →</span>`:`<span class="chip">${esc(n)}</span>`;
+  return i>=0?`<span class="chip">${esc(tests[i].name)}</span>`:`<span class="chip">${esc(n)}</span>`;
  }).join('');
+}
+
+function addModelToQuote(names){
+ const found=[];
+ names.forEach(name=>{
+   const i=findTest(name);
+   if(i>=0){
+     if(!quote.includes(i)) quote.push(i);
+     found.push(i);
+   }
+ });
+ updateCount();
+ if(found.length) showQuote();
+ else alert('見積りに追加できる検査項目がありません。');
+}
+function modelQuoteNames(type,m){
+ if(type==='basic') return uniqTests(m.basic);
+ if(type==='risk') return uniqTests([...m.basic,...m.risk]);
+ if(type==='quality') return uniqTests([...m.basic,...m.quality]);
+ return [];
+}
+function modelQuoteAttr(type,m){
+ return esc(JSON.stringify(modelQuoteNames(type,m)));
 }
 function foodModelHtml(f){
  const m=foodModelSets(f);
- return `<div class="step"><b>① 基本衛生モデル</b><p>日常の衛生状態を確認するベース。</p><div>${modelTestChips(m.basic)}</div></div>
- <div class="step"><b>② 食中毒リスク強化モデル</b><p>原料・喫食方法・工程条件から追加を検討。</p><div>${modelTestChips(m.risk)}</div></div>
- <div class="step"><b>③ 保存性・品質モデル</b><p>日持ち・変敗・包装・低温保存を確認したい場合。</p><div>${modelTestChips(m.quality)}</div></div>
+ const basic=modelQuoteNames('basic',m), risk=modelQuoteNames('risk',m), quality=modelQuoteNames('quality',m);
+ return `<div class="step modelPick" onclick='addModelToQuote(${JSON.stringify(basic)})'>
+   <b>① 基本衛生モデル</b><p>日常の衛生状態を確認するベース。</p>
+   <div>${modelTestChips(m.basic)}</div><div class="modelPickHint">🧾 タップでこのモデルを見積りへ</div>
+ </div>
+ <div class="step modelPick" onclick='addModelToQuote(${JSON.stringify(risk)})'>
+   <b>② 食中毒リスク強化モデル</b><p>基本衛生モデル＋食中毒リスク項目をまとめて見積ります。</p>
+   <div>${modelTestChips(m.risk)}</div><div class="modelPickHint">🧾 タップでこのモデルを見積りへ</div>
+ </div>
+ <div class="step modelPick" onclick='addModelToQuote(${JSON.stringify(quality)})'>
+   <b>③ 保存性・品質モデル</b><p>基本衛生モデル＋日持ち・変敗確認項目をまとめて見積ります。</p>
+   <div>${modelTestChips(m.quality)}</div><div class="modelPickHint">🧾 タップでこのモデルを見積りへ</div>
+ </div>
  <div class="step"><b>この食品での考え方</b><p>${esc(m.note)}</p></div>`;
 }
 function modelSourcesHtml(){
