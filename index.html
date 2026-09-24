@@ -41,17 +41,16 @@ select{width:100%;padding:12px;margin:6px 0 12px;border:1px solid #cfd9e6;border
 .condHead{font-weight:800;font-size:14px;margin-bottom:5px}
 .condText{font-size:13px;line-height:1.6;color:#33485d}
 </style>
-<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=190">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon-180x180.png?v=190">
-<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png?v=190">
-<link rel="manifest" href="./manifest.webmanifest?v=190">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png?v=200">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=200">
+<link rel="manifest" href="/manifest.webmanifest?v=200">
 <meta name="theme-color" content="#1677c8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="食品検査ポケット">
 
-<!-- GitHub Pages compatible build: relative asset paths -->
 </head><body>
 <header><h1>🧪 食品検査ポケット <span style="font-size:11px;color:#789">v1.9</span></h1><div class="search"><input id="q" placeholder="検査名・食品・工程で検索（例：鶏肉、冷却）"></div></header>
 <main id="app"></main>
@@ -187,6 +186,197 @@ function conditionalAdviceHtml(f){
  const a=conditionalAdvice(f);
  return a.map(x=>`<div class="condBox"><div class="condHead">${esc(x.title)} <span class="priorityCond">${esc(x.test)}</span></div><div class="condText">${esc(x.text)}</div></div>`).join('');
 }
+
+function uniqTests(arr){
+ return [...new Set(arr.filter(Boolean))];
+}
+function foodModelSets(f){
+ const n=f.name;
+ let basic=[], risk=[], quality=[], note='';
+
+ // 冷凍食品
+ if(/冷凍食品|冷凍野菜/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）'];
+  risk=/無加熱摂取/.test(n)?['黄色ブドウ球菌','サルモネラ','リステリア']:['黄色ブドウ球菌','サルモネラ'];
+  quality=['真菌（カビ）','酵母'];
+  note='冷凍食品は「無加熱摂取」「加熱後摂取」「凍結直前の加熱有無」で見る項目が変わります。正式区分を先に確認します。';
+ }
+ // 生鮮・水産
+ else if(/刺身|生食用冷凍鮮魚介類|生食用かき|加熱用かき|寿司|ゆでだこ|ゆでがに|魚肉練り|スモークサーモン|いくら|魚卵/.test(n)){
+  basic=['一般生菌数','大腸菌群'];
+  if(/刺身|生食用|寿司|かき|魚卵/.test(n)) risk.push('腸炎ビブリオ');
+  if(/スモークサーモン|いくら|魚卵/.test(n)) risk.push('リステリア');
+  if(/ゆで|魚肉練り|寿司/.test(n)) risk.push('黄色ブドウ球菌');
+  if(/魚肉練り/.test(n)) risk.push('サルモネラ');
+  quality=['酵母','真菌（カビ）'];
+  note='水産品は生食・加熱済み・塩蔵・冷蔵RTEなどでリスクが変わります。海産生食では腸炎ビブリオ、冷蔵RTEではリステリアを条件付きで重視します。';
+ }
+ // 鶏
+ else if(/鶏肉/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）','黄色ブドウ球菌'];
+  risk=['サルモネラ','カンピロバクター（定性）'];
+  quality=[];
+  note='鶏肉ではサルモネラ、カンピロバクターを重要な危害要因として検討。特に内臓摘出・レバー/砂肝処理・解体・腸管内容物との接触がある場合はカンピロバクターの優先度を上げます。';
+ }
+ // 牛・ひき肉・ローストビーフ
+ else if(/牛肉|ローストビーフ|生ハンバーグ|ひき肉/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）','黄色ブドウ球菌'];
+  risk=['サルモネラ','O157'];
+  if(/ローストビーフ/.test(n)) risk.push('リステリア');
+  quality=[];
+  note='生肉・ひき肉・低温調理では原料由来リスクと中心加熱を確認。加熱後にスライスし冷蔵するRTE製品ではリステリアも条件付きで検討します。';
+ }
+ // 豚・食肉製品
+ else if(/豚肉|ハム|ソーセージ|ベーコン/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）','黄色ブドウ球菌'];
+  risk=['サルモネラ'];
+  if(/ハム|ソーセージ|ベーコン/.test(n)) risk.push('リステリア','クロストリジア');
+  quality=['乳酸菌数'];
+  note='食肉製品は製品区分・加熱・包装条件で成分規格や危害が変わります。真空・低酸素包装や長期冷蔵では嫌気性菌、乳酸菌、リステリアを条件付きで検討します。';
+ }
+ // 弁当・惣菜・調理パン
+ else if(/弁当|そうざい|惣菜|サラダ|おにぎり|カレー|シチュー|煮物|サンドイッチ|調理パン|ポテトサラダ|卵焼き|だし巻き|唐揚げ|フライ類|麺類|餃子|しゅうまい/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）','黄色ブドウ球菌'];
+  risk=[];
+  if(/卵焼き|だし巻き|サンドイッチ|調理パン|餃子|しゅうまい/.test(n)) risk.push('サルモネラ');
+  if(/おにぎり|米飯|麺類/.test(n)) risk.push('セレウス（定性）');
+  if(/カレー|シチュー|煮物/.test(n)) risk.push('ウェルシュ（定性）','セレウス（定性）');
+  if(/サラダ|サンドイッチ|ポテトサラダ/.test(n)) risk.push('リステリア');
+  quality=['酵母','真菌（カビ）'];
+  note='惣菜類は「加熱後の手作業」「冷却」「保存温度」が重要です。米飯・麺はセレウス、大鍋調理はウェルシュ、冷蔵RTEはリステリアを条件付きで追加します。';
+ }
+ // 大豆
+ else if(/豆腐|油揚げ|厚揚げ|豆乳/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）','黄色ブドウ球菌'];
+  risk=[];
+  quality=['酵母','乳酸菌数'];
+  note='豆腐類は加熱後の水さらし・冷却・充填・包装による再汚染を重視。日持ちや膨張・酸敗などの相談では酵母・乳酸菌等も検討します。';
+ }
+ else if(/納豆/.test(n)){
+  basic=['大腸菌群','大腸菌（E. coli）'];
+  risk=['黄色ブドウ球菌'];
+  quality=['酵母','真菌（カビ）'];
+  note='発酵食品では有用菌が多いため一般生菌数の単純評価は不向きな場合があります。衛生指標と異常発酵・変敗菌を目的別に選びます。';
+ }
+ else if(/味噌|発酵調味料|キムチ|漬物|浅漬/.test(n)){
+  basic=['大腸菌群','大腸菌（E. coli）'];
+  risk=['黄色ブドウ球菌'];
+  quality=['酵母','真菌（カビ）','乳酸菌数'];
+  note='発酵・漬物はpH、塩分、Aw、低温管理が重要。酵母・カビ・乳酸菌は品質評価の目的で追加します。';
+ }
+ // 菓子・パン
+ else if(/クッキー|焼菓子|和菓子|生菓子|洋菓子|パン|菓子パン|プリン|ゼリー/.test(n)){
+  basic=['一般生菌数','大腸菌群'];
+  risk=['黄色ブドウ球菌'];
+  if(/生菓子|洋菓子|プリン/.test(n)) risk.push('サルモネラ');
+  quality=['真菌（カビ）','酵母'];
+  note='菓子は手作業・卵乳原料・水分活性・包装・保存期間で項目を変えます。焼菓子・低水分品ではカビ・酵母、洋生菓子では黄色ブドウ球菌やサルモネラを重視します。';
+ }
+ // 乳・卵
+ else if(/牛乳|乳飲料|乳製品|アイスクリーム/.test(n)){
+  basic=['一般生菌数','大腸菌群'];
+  risk=['サルモネラ'];
+  quality=['乳酸菌数','酵母','真菌（カビ）'];
+  note='乳・乳製品は正式な製品区分により規格が異なります。発酵乳では有用菌を考慮し、一般生菌数の単純評価を避けます。';
+ }
+ else if(/ヨーグルト|発酵乳/.test(n)){
+  basic=['大腸菌群'];
+  risk=[];
+  quality=['乳酸菌数','酵母','真菌（カビ）'];
+  note='発酵乳は乳酸菌を含むため、衛生指標と発酵状態・変敗菌を分けて評価します。';
+ }
+ else if(/チーズ/.test(n)){
+  basic=['大腸菌群','大腸菌（E. coli）'];
+  risk=['リステリア'];
+  quality=['酵母','真菌（カビ）'];
+  note='ナチュラル/プロセス、熟成、加熱の有無、RTE性、冷蔵保存期間で検査の優先度が変わります。';
+ }
+ else if(/卵|液卵/.test(n)){
+  basic=['一般生菌数','大腸菌群'];
+  risk=['サルモネラ'];
+  quality=[];
+  note='卵・液卵はサルモネラを優先。未殺菌液卵、生・半熟用途では原料仕様と加熱条件を重点確認します。';
+ }
+ // 飲料・水
+ else if(/清涼飲料|ミネラルウォーター|井戸水|飲用水|氷/.test(n)){
+  basic=['一般生菌数','大腸菌（E. coli）'];
+  risk=[];
+  quality=['酵母','真菌（カビ）'];
+  note='飲料・水は製品・用途ごとの法令上の規格や水質基準を優先。酸性・糖含有飲料では酵母、製造設備ではバイオフィルム等も考慮します。';
+ }
+ // 野菜果実
+ else if(/カット野菜|生野菜|カットフルーツ|果実|加熱済み野菜|温野菜/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）'];
+  risk=['黄色ブドウ球菌'];
+  if(/加熱済み野菜|温野菜|カット野菜/.test(n)) risk.push('リステリア');
+  quality=['酵母','真菌（カビ）'];
+  note='非加熱野菜は原料由来菌が反映されやすいため、衛生指標は工程・洗浄条件と合わせて解釈。加熱後RTEや長期冷蔵ではリステリアを検討します。';
+ }
+ // RTE / 真空
+ else if(/RTE/.test(n)){
+  basic=['一般生菌数','大腸菌群','大腸菌（E. coli）','黄色ブドウ球菌'];
+  risk=['サルモネラ','リステリア'];
+  quality=['乳酸菌数','酵母','真菌（カビ）'];
+  note='RTE食品は喫食前の再加熱がないため、加熱後環境からの再汚染と冷蔵中の増殖を重視します。';
+ }
+ else if(/真空包装|低酸素包装/.test(n)){
+  basic=['一般生菌数','大腸菌群'];
+  risk=['クロストリジア','ウェルシュ（定性）','リステリア'];
+  quality=['乳酸菌数','酵母'];
+  note='真空・低酸素包装は嫌気性菌を考慮。pH、Aw、加熱条件、冷蔵条件、保存期間をセットで確認します。';
+ }
+ else if(/保存試験/.test(n)){
+  basic=['一般生菌数','大腸菌群'];
+  risk=['食品特性に応じた食中毒菌'];
+  quality=['真菌（カビ）','酵母','乳酸菌数'];
+  note='保存試験は食品特性に合わせて菌項目、pH、Aw、官能等を組み合わせます。単一の固定セットではなく期限設定の目的から設計します。';
+ }
+ // 調味料・乾燥品
+ else if(/ソース|たれ|ドレッシング|ジャム|フルーツソース|乾燥食品|乾物/.test(n)){
+  basic=['一般生菌数','大腸菌群'];
+  risk=[];
+  if(/乾燥食品|乾物/.test(n)) risk.push('セレウス（定性）');
+  quality=['真菌（カビ）','酵母'];
+  note='pH、Aw、糖・塩濃度、加熱充填、乾燥度でリスクが変わります。低水分・酸性でもカビ・酵母の保存性評価が重要です。';
+ }
+
+ if(!basic.length) basic=f.suggest.slice(0,Math.min(3,f.suggest.length));
+ if(!risk.length) risk=f.suggest.filter(x=>/サルモネラ|黄色ブドウ|O157|カンピロ|リステリア|セレウス|ウェルシュ|クロストリジア|腸炎ビブリオ/.test(x));
+ if(!quality.length) quality=f.suggest.filter(x=>/真菌|酵母|乳酸/.test(x));
+
+ // 既存の推奨候補にない項目もモデルとして表示できるが、検査マスタに存在しない場合は単なる文字表示にする。
+ return {
+  basic:uniqTests(basic),
+  risk:uniqTests(risk),
+  quality:uniqTests(quality),
+  note:note || '複数の検査機関の公開情報と食品特性・製造工程を整理した自主検査モデルです。'
+ };
+}
+function modelTestChips(arr){
+ if(!arr.length) return '<span class="muted">該当なし／製品条件で判断</span>';
+ return arr.map(n=>{
+  const i=findTest(n);
+  return i>=0?`<span class="chip" onclick="showDetail(${i})">${esc(tests[i].name)} →</span>`:`<span class="chip">${esc(n)}</span>`;
+ }).join('');
+}
+function foodModelHtml(f){
+ const m=foodModelSets(f);
+ return `<div class="step"><b>① 基本衛生モデル</b><p>日常の衛生状態を確認するベース。</p><div>${modelTestChips(m.basic)}</div></div>
+ <div class="step"><b>② 食中毒リスク強化モデル</b><p>原料・喫食方法・工程条件から追加を検討。</p><div>${modelTestChips(m.risk)}</div></div>
+ <div class="step"><b>③ 保存性・品質モデル</b><p>日持ち・変敗・包装・低温保存を確認したい場合。</p><div>${modelTestChips(m.quality)}</div></div>
+ <div class="step"><b>この食品での考え方</b><p>${esc(m.note)}</p></div>`;
+}
+function modelSourcesHtml(){
+ return `<div class="note">このモデルは法的な必須セットではありません。複数機関の公開情報を参考に、食品特性・原材料・工程・喫食方法・保存条件から自主検査候補を整理したものです。</div>
+ <p style="font-size:13px;line-height:1.8">
+ <a href="https://www.koutou-biken.co.jp/environment/food-inspection/microbial-examination/" target="_blank">江東微生物研究所：食品微生物検査・主な食品の推奨項目</a><br>
+ <a href="https://www.medience.co.jp/food/foodstuff/microorganism/microbiological.html" target="_blank">LSIメディエンス：微生物検査・お薦め検査項目セット</a><br>
+ <a href="https://ahc-bact.co.jp/inspection/food/bacteria/" target="_blank">AHC：食品別の細菌検査セット例</a><br>
+ <a href="https://www.life-silver.com/mbic_inspection/biseibutsu/" target="_blank">ALSOKエムビック研究所：食品微生物検査セット</a><br>
+ <a href="https://www.jfrl.or.jp/service/microorganism" target="_blank">日本食品分析センター：微生物試験</a>
+ </p>`;
+}
+
 function showFood(i){
  const f=foods[i];
  const sug=f.suggest.map(n=>{let ti=findTest(n);if(ti<0)return '';const pr=foodTestPriority(f,n);return `<div class="card" onclick="showDetail(${ti})"><div class="row"><b>${esc(tests[ti].name)}</b><span class="${pr.cls}">${esc(pr.label)}</span></div><div class="meta"><span class="pill">${money(tests[ti].price)}</span><span class="pill">報告 ${esc(tests[ti].days)}</span></div><div style="font-size:12px;color:#637386;margin-top:8px;line-height:1.55">${esc(pr.note)}</div></div>`}).join('');
@@ -194,7 +384,9 @@ function showFood(i){
  <h2>${f.icon} ${esc(f.name)}</h2><p>${esc(f.summary)}</p>
  <h3>規格基準・確認事項</h3><p>${esc(f.legalText)}</p>
  <h3>検査候補と優先度</h3><p>${esc(f.reason)}</p>${sug}
+ <h3>🧪 検査モデルセット</h3>${foodModelHtml(f)}
  <h3>🔍 製造条件で変わる検査</h3>${conditionalAdviceHtml(f)}
+ <h3>モデルセットの参考情報</h3>${modelSourcesHtml()}
  <div class="actions"><button class="primary" onclick="foodResultGuide(${i})">🧭 この食品で結果を考える</button><button onclick="addFoodSuggestions(${i})">候補をまとめて見積りへ</button></div>
  <div class="note">「条件で優先」は、その検査が常に必須という意味ではありません。食品の正式区分、原材料、工程、喫食方法、HACCP上の危害分析、顧客仕様を確認して採否を決めてください。</div>
  <h3>公的資料</h3><p><a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/jigyousya/shokuhin_kikaku/index.html" target="_blank">食品別の規格基準について</a><br><a href="https://www.fsc.go.jp/foodsafetyinfo_map/foodhazinfohub/foodhazinfohub_bio.html" target="_blank">食品安全委員会：微生物等</a>${f.name==='鶏肉・鶏肉加工品'?'<br><a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/syokuchu/campylobacterqa.html" target="_blank">厚生労働省：カンピロバクターQ&A</a><br><a href="https://www.fsc.go.jp/iinkai/20shunen/03_campylobacter.html" target="_blank">食品安全委員会：食鳥処理とカンピロバクター</a>':''}</p>
